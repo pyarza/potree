@@ -132,6 +132,8 @@ Renderer.prototype.render = function(){
 			pointCloudOctrees.push(node);
 		}else if(node instanceof Sphere){
 			meshes.push(node);
+		}else if(node instanceof MeshNode){
+			meshes.push(node);
 		}
 	}
 	

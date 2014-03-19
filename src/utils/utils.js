@@ -31,6 +31,16 @@ function load_binary_resource(url) {
 	return req.responseText;
 }
 
+function pathExists(url){
+	var req = new XMLHttpRequest();
+	req.open('GET', url, false);
+	req.send(null);
+	if (req.status !== 200) {
+		return false;
+	}
+	return true;
+}
+
 /**
  * load a binary resource directly into an an ArrayBuffer
  * 

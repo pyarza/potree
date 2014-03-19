@@ -25,8 +25,12 @@ POCLoader.load = function load(file) {
 		xhr.send(null);
 		if(xhr.status === 200 || xhr.status === 0){
 			var fMno = JSON.parse(xhr.responseText);
+			if(pathExists(fMno.octreeDir)){
+				pco.octreeDir = fMno.octreeDir;
+			}else{
+				pco.octreeDir = file + "/../" + fMno.octreeDir;
+			}
 			
-			pco.octreeDir = file + "/../data";
 			var pointAttributes = POCLoader.loadPointAttributes(fMno);
 			pco.setPointAttributes(pointAttributes);
 			
