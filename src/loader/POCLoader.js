@@ -25,7 +25,7 @@ POCLoader.load = function load(file) {
 		xhr.send(null);
 		if(xhr.status === 200 || xhr.status === 0){
 			var fMno = JSON.parse(xhr.responseText);
-			if(pathExists(fMno.octreeDir)){
+			if(pathExists(fMno.octreeDir + "/r")){
 				pco.octreeDir = fMno.octreeDir;
 			}else{
 				pco.octreeDir = file + "/../" + fMno.octreeDir;
