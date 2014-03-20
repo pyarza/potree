@@ -149,3 +149,13 @@ function numbersonly(myfield, e, dec) {
 	} else
 		return false;
 }
+
+
+function mouseIsInCanvas(event){
+	var nx = event.layerX / Potree.canvas.width;
+	var ny = (Potree.canvas.height - event.layerY) / Potree.canvas.height;
+	
+	return (0 <= nx && nx <= 1) && (0 <= ny && ny <= 1);
+}
+
+
