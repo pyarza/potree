@@ -2,8 +2,11 @@
  *  gulp.js to build the library
  */
 var path = require('path');
+var through = require('through');
 var gulp = require('gulp');
 var gutil = require('gulp-util');
+var File = gutil.File;
+
 
 var tap = require('gulp-tap');
 var size = require('gulp-size');
@@ -17,7 +20,13 @@ var rename = require('gulp-rename');
 var minify = require('gulp-minify-css');
 var htmlreplace = require('gulp-html-replace');
 
+
 var paths = {
+	shader: [
+		"./resources/shader/*",
+		"./resources/shader/filteredSplats/*", 
+		"./resources/shader/weightedPoints/*", 
+	],
 	mjs: [
 		"./libs/mjs/mjs.js"
 	],
@@ -44,7 +53,7 @@ var paths = {
 		"./src/scenegraph/Camera.js",
 		"./src/scenegraph/Scene.js",
 		"./src/scenegraph/MeshNode.js",
-		"./src/sce -anegraph/Light.js",
+		"./src/scenegraph/Light.js",
 		"./src/scenegraph/Sphere.js",
 		"./src/objects/Mesh.js",
 		"./src/navigation/CamHandler.js",
@@ -71,11 +80,63 @@ var paths = {
 		"./src/loader/PointAttributes.js",
 		"./src/loader/PlyLoader.js",
 		"./src/utils/LRU.js",
-		"./src/Potree.js"
+		"./src/Potree.js",
+		"./build/js/shader.js"
 	]
 };
 
+/**
+ * modified gulp-replace
+ * This task combines all shaders and saves them into shader.js
+ * 
+ */
+pack_shader = function() {
+	// Build examples
+	var buffer = [];
+	buffer.push("Potree.shaderSources = {");
+	var firstFile = null;
+	var fileName = "shader.js";
+	opt = {};
+	opt.newLine = gutil.linefeed;
+	
+	function bufferContents(file){
+		if (file.isNull()) return; // ignore
+		if (!firstFile) firstFile = file;
+		
+		var str = file.contents.toString('utf8');
+		str = str.replace(/(\r\n|\n|\r)/gm,"\\n");
+		buffer.push("\"" + file.relative.replace(/\\/gm, "/") + "\" : \"" + str + "\",");
+	}
+	
+	function endStream(){
+		if (buffer.length === 0) return this.emit('end');
+		
+		var joinedContents = buffer.join(opt.newLine);
+		joinedContents = joinedContents + "\n};";
+		
+		var joinedPath = path.join(firstFile.base, fileName);
+		
+		var joinedFile = new File({
+			cwd: firstFile.cwd,
+			base: firstFile.base,
+			path: joinedPath,
+			contents: new Buffer(joinedContents)
+		});
+		
+		this.emit('data', joinedFile);
+		this.emit('end');
+	}
+	
+	gulp.src("./resources/shader/**/*")
+		.pipe(new function (files,t) {return through(bufferContents, endStream)})
+		.pipe(size({showFiles: true}))
+		.pipe(gulp.dest('build/js'));
+};
+
+gulp.task('pack_shader', pack_shader);
+
 gulp.task('scripts', function() {
+	
 	// Copy all JavaScript into build directory
 	gulp.src(paths.mjs)
 		.pipe(concat('mjs.js'))

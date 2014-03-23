@@ -5,6 +5,7 @@
   "description": "Packages required by build process",
   "dependencies": {
     "gulp": "*",
+	"through": "*",
     "gulp-tap": "*",
     "gulp-util": "*",
     "gulp-size": "*",

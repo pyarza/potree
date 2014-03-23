@@ -52,9 +52,12 @@ ShaderManager.loadShader = function(name, shaderType, shaderSource) {
 };
 
 ShaderManager.getShaderSource = function(name){
-	var url = Potree.shaderDir + "/" + name;
-	
-	return load_binary_resource(url);
+	if(Potree.shaderSources[name] != null){
+		return Potree.shaderSources[name];
+	}else{
+		var url = Potree.shaderDir + "/" + name;
+		return load_binary_resource(url);
+	}
 };
 
 ShaderManager.addShader = function(shader){
