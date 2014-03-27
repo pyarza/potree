@@ -143,7 +143,7 @@ gulp.task('scripts', function() {
 		.pipe(size({showFiles: true}))
 		.pipe(gulp.dest('build/js'))
 		.pipe(rename({suffix: '.min'}))
-		.pipe(uglify({preserveComments: 'some'}))
+		.pipe(uglify({preserveComments: 'some', compress: false}))
 		.pipe(size({showFiles: true}))
 		.pipe(gulp.dest('build/js'));
 
