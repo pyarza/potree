@@ -270,35 +270,25 @@ SceneNode.prototype.yaw = SceneNode.prototype.rotateY;
 SceneNode.prototype.pitch = SceneNode.prototype.rotateX;
 SceneNode.prototype.roll = SceneNode.prototype.rotateZ;
 
-///**
-// * rotation around the up vector
-// */
-//SceneNode.prototype.yaw = function(angle){
-//	var pos = this.localPosition;
-//	this.translate(-pos.x, -pos.y, -pos.z);
-//	this.rotate(angle, this.getUpVector());
-//	this.translate(pos.x, pos.y, pos.z);
-//};
-//
-///**
-// * rotation around the side vector
-// */
-//SceneNode.prototype.pitch = function(angle){
-//	var pos = this.localPosition;
-//	this.translate(-pos.x, -pos.y, -pos.z);
-//	this.rotate(angle, this.getSideVector());
-//	this.translate(pos.x, pos.y, pos.z);
-//};
-//
-///**
-// * rotation around the view direction
-// */
-//SceneNode.prototype.roll = function(angle){
-//	var pos = this.localPosition;
-//	this.translate(-pos.x, -pos.y, -pos.z);
-//	this.rotate(angle, this.getLocalDirection());
-//	this.translate(pos.x, pos.y, pos.z);
-//}
+Object.defineProperty(SceneNode.prototype, "yaw",{
+	set: function(value){
+		var yaw = this.getYaw();
+		this.rotateY(value-yaw);
+	},
+	get: function(){
+		return this.getYaw();
+	}
+});
+
+Object.defineProperty(SceneNode.prototype, "pitch",{
+	set: function(value){
+		var pitch = this.getPitch();
+		this.rotateX(value-pitch);
+	},
+	get: function(){
+		return this.getPitch();
+	}
+});
 
 /**
  * rotation around arbitrary vector
@@ -355,29 +345,24 @@ SceneNode.prototype.getPitch = function(){
 	return pitch;
 };
 
-/**
- * Set point of view
- * position:	x,y,z		 
- * orientation:	yaw, pitch, roll 	
- */
-SceneNode.prototype.setPOV = function(x, y, z, yaw, pitch){
-	var t = M4x4.clone(M4x4.I);
-	this.transform = t;
-//	this.roll(roll);
-	this.pitch(pitch);
-	this.yaw(yaw);
-	this.translate(x,y,z);
-};
-
-SceneNode.prototype.getPOV = function(){
-	var pov = {
-		pos: this.localPosition,
-		yaw: this.getYaw(),
-		pitch: this.getPitch()
-	}
+Object.defineProperty(SceneNode.prototype, "pointOfView", {
+	set: function(value){
+		this.resetTransformation();
+		this.pitch += value.pitch;
+		this.yaw += value.yaw;
+		this.localPosition = value.pos;
+		console.log(this.yaw);
+	},
+	get: function(){
+		var pov = {
+			pos: this.localPosition,
+			yaw: this.yaw,
+			pitch: this.pitch
+		}
 	
-	return pov;
-}
+		return pov;
+	}
+});
 
 
 

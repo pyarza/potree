@@ -82,14 +82,15 @@ test("euler rotations", function(){
 	
 	// repeatedly call yaw(1) and check if getYaw() returns the correct value
 	for(var i = 0; i < 10; i++){
-		cam.yaw(1);
-		ok(V3.equalScalar(cam.getYaw(), (i+1) % (2*Math.PI), eps), "yaw: " + cam.getYaw());
+//		cam.yaw(1);
+		cam.yaw += 1;
+		ok(V3.equalScalar(cam.yaw, (i+1) % (2*Math.PI), eps), "yaw: " + cam.getYaw());
 		ok(V3.equalScalar(cam.getPitch(), 0, eps), "pitch: " + cam.getPitch());
 	}
 	
 	// test pitch
 	cam.resetTransformation();
-	cam.pitch(1);
+	cam.pitch += 1;
 	ok(V3.equalScalar(cam.getPitch(), 1, eps), "pitch: " + cam.getPitch());
 	
 	// doing a pitch with value 1 two times will result in a pitch of PI -2
@@ -102,23 +103,24 @@ test("euler rotations", function(){
 	//     /|
 	//    / |
 	//   
-	cam.pitch(1);
+	cam.pitch += 1;
 	ok(V3.equalScalar(cam.getPitch(), Math.PI - 2, eps), "pitch: " + cam.getPitch());
-	ok(V3.equalScalar(cam.getYaw(), Math.PI, eps), "pitch: " + cam.getPitch());
+	ok(V3.equalScalar(cam.yaw, Math.PI, eps), "pitch: " + cam.getPitch());
 });
 
 test("setPOV", function(){
 	var cam = new SceneNode("cam");
-	cam.setPOV(1,2,3, Math.PI/2, 0.2);
-	var pov = cam.getPOV();
-	ok(V3.equalScalar(pov.yaw, Math.PI/2, eps), "");
+	
+	cam.pointOfView = {pos: [1,2,3], pitch: 0.2, yaw: 1.5};
+	var pov = cam.pointOfView;
+	ok(V3.equalScalar(pov.yaw, 1.5, eps), "yaw: " + pov.yaw);
 	ok(V3.equalScalar(pov.pitch, 0.2, eps), "pitch: " + cam.getPitch());
 	ok(V3.equal(pov.pos, [1,2,3], eps), "");
 	
-	cam.setPOV(0,0,0, 0.3, -0.1);
-	pov = cam.getPOV();
-	ok(V3.equalScalar(pov.yaw, 0.3, eps), "");
-	ok(V3.equalScalar(pov.pitch, -0.1, eps), "pitch: " + cam.getPitch());
+	cam.pointOfView = {pos: [0,0,0], pitch: -0.7, yaw: 6};
+	var pov = cam.pointOfView;
+	ok(V3.equalScalar(pov.yaw, 6, eps), "");
+	ok(V3.equalScalar(pov.pitch, -0.7, eps), "pitch: " + cam.getPitch());
 	ok(V3.equal(pov.pos, [0,0,0], eps), "");
 	
 });
@@ -136,10 +138,10 @@ test("position property", function(){
 	ok(V3.equal(palm.globalPosition, [10, 100, 30], eps));
 	ok(V3.equal(coconut.globalPosition, [11, 95, 31], eps));
 	
-	coconut.globalPosition = [10, 11, 12];
+	coconut.globalPosition = [10, 95, 30];
 	ok(V3.equal(palm.globalPosition, [10, 100, 30], eps));
-	ok(V3.equal(coconut.globalPosition, [10, 11, 12], eps));
-	ok(V3.equal(coconut.localPosition, [0, -89, -18], eps));
+	ok(V3.equal(coconut.globalPosition, [10, 95, 30], eps));
+	ok(V3.equal(coconut.localPosition, [0, -5, 0], eps));
 	
 });
 
