@@ -52,7 +52,7 @@ ShaderManager.loadShader = function(name, shaderType, shaderSource) {
 };
 
 ShaderManager.getShaderSource = function(name){
-	if(Potree.shaderSources[name] != null){
+	if(Potree.shaderSources != null && Potree.shaderSources[name] != null){
 		return Potree.shaderSources[name];
 	}else{
 		var url = Potree.shaderDir + "/" + name;

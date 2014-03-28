@@ -248,23 +248,127 @@ SceneNode.prototype.rotateY = function(angle) {
 };
 
 SceneNode.prototype.rotateZ = function(angle) {
-	this._transform = M4x4.mul(M4x4.rotate(angle, V3.$(0, 0, 1), M4x4.I), this._transform);
+	this._transform = M4x4.mul(M4x4.rotate(angle, V3.$(0, 0, -1), M4x4.I), this._transform);
 };
 
+SceneNode.prototype.resetTransformation = function(){
+	this.transform = M4x4.I;
+}
+
+SceneNode.prototype.yaw = SceneNode.prototype.rotateY;
+SceneNode.prototype.pitch = SceneNode.prototype.rotateX;
+SceneNode.prototype.roll = SceneNode.prototype.rotateZ;
+
+///**
+// * rotation around the up vector
+// */
+//SceneNode.prototype.yaw = function(angle){
+//	var pos = this.localPosition;
+//	this.translate(-pos.x, -pos.y, -pos.z);
+//	this.rotate(angle, this.getUpVector());
+//	this.translate(pos.x, pos.y, pos.z);
+//};
+//
+///**
+// * rotation around the side vector
+// */
+//SceneNode.prototype.pitch = function(angle){
+//	var pos = this.localPosition;
+//	this.translate(-pos.x, -pos.y, -pos.z);
+//	this.rotate(angle, this.getSideVector());
+//	this.translate(pos.x, pos.y, pos.z);
+//};
+//
+///**
+// * rotation around the view direction
+// */
+//SceneNode.prototype.roll = function(angle){
+//	var pos = this.localPosition;
+//	this.translate(-pos.x, -pos.y, -pos.z);
+//	this.rotate(angle, this.getLocalDirection());
+//	this.translate(pos.x, pos.y, pos.z);
+//}
+
+/**
+ * rotation around arbitrary vector
+ */
 SceneNode.prototype.rotate = function(angle, vector){
 	this._transform = M4x4.mul(M4x4.rotate(angle, vector, M4x4.I), this._transform);
-}
+};
 
 SceneNode.prototype.rotateAroundPivot = function(x, y, pivot){
 	this.translate(-pivot.x, -pivot.y, -pivot.z);
 	this.rotateY(x);
 	this.rotate(y, this.getSideVector());
 	this.translate(pivot.x, pivot.y, pivot.z);
-}
+};
 
 SceneNode.prototype.scale = function(x, y, z) {
 	this._transform = M4x4.scale3(x, y, z, this._transform);
 };
+
+/**
+ * get the angle of the direction on the xz plane
+ * This can be != 0, even if no yaw operation has been done. 
+ * This is because if you do a pitch, you might end up looking in the other direction.
+ * If this happens, the yaw increases by 180° (PI radians)
+ * 
+ */
+SceneNode.prototype.getYaw = function(){
+	var dir = this.getLocalDirection();
+	dir[1] = 0;
+	dir = V3.normalize(dir);
+	var yaw = Math.atan2(-dir.z,dir.x) - Math.PI/2
+	if(yaw < 0){
+		yaw = 2*Math.PI + yaw;
+	}
+	return yaw;
+};
+
+/**
+ * get the angle of the nodes up or down direction.
+ * If do too much pitch operations, you'll end up looking in the other direction.
+ * In this case, the actual pitch value becomes PI - pitch.
+ * For example, calling pitch(2) will result in getPitch() = PI - 2 = 1.1415
+ * 
+ */
+SceneNode.prototype.getPitch = function(){
+	var dir = this.getLocalDirection();
+	var yaw = this.getYaw();
+	
+	// remove yaw part
+	var remYaw = M4x4.makeRotate(-yaw, [0,1,0]);
+	dir = V3.transform(dir, remYaw);
+	var pitch = Math.atan2(dir.y, -dir.z);
+	
+	return pitch;
+};
+
+/**
+ * Set point of view
+ * position:	x,y,z		 
+ * orientation:	yaw, pitch, roll 	
+ */
+SceneNode.prototype.setPOV = function(x, y, z, yaw, pitch){
+	var t = M4x4.clone(M4x4.I);
+	this.transform = t;
+//	this.roll(roll);
+	this.pitch(pitch);
+	this.yaw(yaw);
+	this.translate(x,y,z);
+};
+
+SceneNode.prototype.getPOV = function(){
+	var pov = {
+		pos: this.localPosition,
+		yaw: this.getYaw(),
+		pitch: this.getPitch()
+	}
+	
+	return pov;
+}
+
+
 
 SceneNode.prototype.lookAt = function(target){
 	//TODO check for correctness
