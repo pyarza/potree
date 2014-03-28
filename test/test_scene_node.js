@@ -123,7 +123,25 @@ test("setPOV", function(){
 	
 });
 
-
+test("position property", function(){
+	var world = new SceneNode("world");
+	var palm = new SceneNode("palm", world);
+	var coconut = new SceneNode("coconut", palm)
+	
+	palm.localPosition = [10, 100, 30];
+	ok(V3.equal(palm.globalPosition, [10, 100, 30], eps));
+	ok(V3.equal(coconut.globalPosition, [10, 100, 30], eps));
+	
+	coconut.localPosition = [1,-5,1];
+	ok(V3.equal(palm.globalPosition, [10, 100, 30], eps));
+	ok(V3.equal(coconut.globalPosition, [11, 95, 31], eps));
+	
+	coconut.globalPosition = [10, 11, 12];
+	ok(V3.equal(palm.globalPosition, [10, 100, 30], eps));
+	ok(V3.equal(coconut.globalPosition, [10, 11, 12], eps));
+	ok(V3.equal(coconut.localPosition, [0, -89, -18], eps));
+	
+});
 
 
 
