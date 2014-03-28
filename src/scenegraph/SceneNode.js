@@ -88,12 +88,23 @@ Object.defineProperty(SceneNode.prototype, 'globalTransformation', {
 });
 
 Object.defineProperty(SceneNode.prototype, 'localPosition', {
+	set: function(value){
+		var oldPos = this.localPosition;
+		this.translate(-oldPos.x, -oldPos.y, -oldPos.z);
+		this.translate(value.x, value.y, value.z);
+	},
 	get: function(){
 		return V3.transform(V3.$(0, 0, 0), this._transform);
 	}
 });
 
 Object.defineProperty(SceneNode.prototype, 'globalPosition', {
+	set: function(value){
+		var oldPos = this.localPosition;
+		var oldGlobalPos = this.globalPosition;
+		var diff = V3.sub(value, oldGlobalPos);
+		this.translate(diff.x, diff.y, diff.z);
+	},
 	get: function(){
 		V3.transform(V3.$(0, 0, 0), this.globalTransformation, this._globalPosition);
 		return this._globalPosition;
