@@ -226,7 +226,10 @@ gulp.task('watch', function () {
 });
 
 // Simple webserver
-gulp.task('serve', serve('build'));
+gulp.task('serve', serve({
+	root: ['public', __dirname],
+	port: 3000
+}));
 
 // called when you run `gulp` from cli
 gulp.task('build', ['examples', 'scripts', 'styles', 'docs']);
