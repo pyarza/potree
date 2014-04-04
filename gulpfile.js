@@ -6,6 +6,7 @@ var through = require('through');
 var gulp = require('gulp');
 var gutil = require('gulp-util');
 var File = gutil.File;
+var runSequence = require('run-sequence');
 
 
 var tap = require('gulp-tap');
@@ -127,7 +128,7 @@ pack_shader = function() {
 		this.emit('end');
 	}
 	
-	gulp.src("./resources/shader/**/*")
+	return gulp.src("./resources/shader/**/*")
 		.pipe(new function (files,t) {return through(bufferContents, endStream)})
 		.pipe(size({showFiles: true}))
 		.pipe(gulp.dest('build/js'));
@@ -135,19 +136,19 @@ pack_shader = function() {
 
 gulp.task('pack_shader', pack_shader);
 
-gulp.task('scripts', function() {
-	
-	// Copy all JavaScript into build directory
-	gulp.src(paths.mjs)
-		.pipe(concat('mjs.js'))
-		.pipe(size({showFiles: true}))
-		.pipe(gulp.dest('build/js'))
-		.pipe(rename({suffix: '.min'}))
-		.pipe(uglify({preserveComments: 'some', compress: false}))
-		.pipe(size({showFiles: true}))
-		.pipe(gulp.dest('build/js'));
+gulp.task('scripts_mjs', function(){
+	return gulp.src(paths.mjs)
+			.pipe(concat('mjs.js'))
+			.pipe(size({showFiles: true}))
+			.pipe(gulp.dest('build/js'))
+			.pipe(rename({suffix: '.min'}))
+			.pipe(uglify({preserveComments: 'some', compress: false}))
+			.pipe(size({showFiles: true}))
+			.pipe(gulp.dest('build/js'));
+})
 
-	gulp.src(paths.potree)
+gulp.task('scripts_potree', function() {
+	return gulp.src(paths.potree)
 		.pipe(concat('potree.js'))
 		.pipe(size({showFiles: true}))
 		.pipe(gulp.dest('build/js'))
@@ -155,8 +156,11 @@ gulp.task('scripts', function() {
 		.pipe(uglify({preserveComments: 'some'}))
 		.pipe(size({showFiles: true}))
 		.pipe(gulp.dest('build/js'));
-	return;
 });
+
+gulp.task('scripts', function(callback){
+	runSequence('pack_shader', 'scripts_mjs', 'scripts_potree', callback);
+})
 
 gulp.task('styles', function() {
 	// Copy all Stylesheets into build directory
@@ -199,6 +203,7 @@ gulp.task('examples', function() {
 	// Copy resources
 	gulp.src('./resources/**/*')
 		.pipe(gulp.dest('build'));
+	return;
 });
 
 gulp.task('test', function() {
@@ -232,7 +237,7 @@ gulp.task('serve', serve({
 }));
 
 // called when you run `gulp` from cli
-gulp.task('build', ['examples', 'scripts', 'styles', 'docs']);
-gulp.task('debug', ['build', 'watch', 'serve'], function () {
-	gutil.log('Webserver started:', gutil.colors.cyan('http://localhost:3000'));
-});
+gulp.task('build', [/*'examples',*/ 'scripts', 'styles', 'docs']);
+//gulp.task('debug', ['build', 'watch', 'serve'], function () {
+//	gutil.log('Webserver started:', gutil.colors.cyan('http://localhost:3000'));
+//});
