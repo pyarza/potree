@@ -23,7 +23,8 @@ function PointcloudOctreeNode(name, poc) {
 	// opacity raises or falls over time, depending whether fade is positive or negative. 
 	this.fade = 0;
 	
-	this.aabb = null;
+//	this.aabb = null;
+	this._aabb = null;
 	
 	if(PointcloudOctreeNode.lruNodes == null){
 		PointcloudOctreeNode.lruNodes = new LRU();
@@ -114,6 +115,15 @@ PointcloudOctreeNode.prototype.addTime = function addTime(time){
 PointcloudOctreeNode.prototype.setAABB = function(aabb){
 	this.aabb = aabb;
 };
+
+Object.defineProperty(PointcloudOctreeNode.prototype, "aabb", {
+	get: function(){
+		return this._aabb;
+	},
+	set: function(aabb){
+		this._aabb = aabb;
+	}
+});
 
 PointcloudOctreeNode.prototype.addChild = function(child) {
 

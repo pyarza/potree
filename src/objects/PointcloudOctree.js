@@ -259,5 +259,10 @@ PointcloudOctree.prototype.processLoadQueue = function(){
 	
 	// clear loadQueue
 	this.loadQueue.length = 0;
-//	this.loadQueue = new Array();
 };
+
+Object.defineProperty(PointcloudOctree.prototype, "aabb", {
+	get: function(){
+		return this.rootNode.aabb;
+	}
+});

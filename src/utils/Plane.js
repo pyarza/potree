@@ -42,3 +42,18 @@ Plane.prototype.intersection = function(origin, dir){
 	
 	return I;
 };
+
+/**
+ * dir is a 3 element array, like [0, 1, 0]
+ */
+Plane.prototype.intersectionDistance = function(origin, dir){
+	var N = this.normal;
+	var O = origin;
+	var D = dir;
+	var d = this.distance;
+	
+	// calculate distance from ray origin to intersection
+	var t = -(d + V3.dot(N, O))/(V3.dot(N, D));
+	
+	return t;
+};

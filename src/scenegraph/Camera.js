@@ -171,8 +171,30 @@ Camera.prototype.getNearClipIntersection = function(nx, ny){
     return I;
 };
 
-
-
-
-
+/**
+ * centers the camera to the given node and zooms out until its in the field of view
+ */
+Camera.prototype.zoomToNode = function(node){
+	var aabb = node.aabb;
+	var dir = this.getGlobalDirection();
+	this.globalPosition = aabb.center;
+	this.translate(V3.scale(dir, -1).x, V3.scale(dir, -1).y, V3.scale(dir, -1).z);
+	var frustum = this.frustum;
+	
+	var min = Number.MAX_VALUE;
+	var max = Number.MIN_VALUE;
+	var msg = "";
+	for(var i = 0; i < 8; i++){
+		var tp = aabb["tp" + i];
+		var dl = this.frustum.leftPlane.intersectionDistance(tp, dir);
+		var dr = this.frustum.rightPlane.intersectionDistance(tp, dir);
+		var dt = this.frustum.topPlane.intersectionDistance(tp, dir);
+		var db = this.frustum.bottomPlane.intersectionDistance(tp, dir);
+		var distance = Math.max(dl, dr, dt, db);
+		min = Math.min(min, distance);
+		max = Math.max(max, distance);
+	}	
+	var offset = V3.scale(dir, -max); 
+	this.translate(offset.x, offset.y, offset.z);
+}
 

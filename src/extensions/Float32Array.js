@@ -13,7 +13,10 @@ Float32Array = Float32Array;
 Float32Array.prototype.toString = function() {
 	var msg = "";
 	for ( var i = 0; i < this.length; i++) {
-		msg += this[i] + ", ";
+		msg += this[i];
+		if(i < this.length -1){
+			msg += ", ";
+		}
 	}
 	return msg;
 };

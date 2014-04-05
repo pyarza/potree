@@ -269,7 +269,7 @@ SceneNode.prototype.resetTransformation = function(){
 SceneNode.prototype.yaw = SceneNode.prototype.rotateY;
 SceneNode.prototype.pitch = SceneNode.prototype.rotateX;
 SceneNode.prototype.roll = SceneNode.prototype.rotateZ;
-
+   
 Object.defineProperty(SceneNode.prototype, "yaw",{
 	set: function(value){
 		var yaw = this.getYaw();

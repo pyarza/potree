@@ -43,3 +43,11 @@ Object.defineProperty(PointcloudOctreeSceneNode.prototype, "minDepth", {
 		this.mno.minDepth = value;
 	}
 });
+
+Object.defineProperty(PointcloudOctreeSceneNode.prototype, "aabb", {
+	get: function(){ 
+		var aabb = this.mno.rootNode.aabb;
+		aabb.setTransform(this.globalTransformation);
+		return aabb;
+	}
+});
