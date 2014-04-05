@@ -174,7 +174,10 @@ Camera.prototype.getNearClipIntersection = function(nx, ny){
 /**
  * centers the camera to the given node and zooms out until its in the field of view
  */
-Camera.prototype.zoomToNode = function(node){
+Camera.prototype.zoomTo = function(node, factor){
+	if(factor == null){
+		factor = 1;
+	}
 	var aabb = node.aabb;
 	var dir = this.getGlobalDirection();
 	this.globalPosition = aabb.center;
@@ -194,7 +197,7 @@ Camera.prototype.zoomToNode = function(node){
 		min = Math.min(min, distance);
 		max = Math.max(max, distance);
 	}	
-	var offset = V3.scale(dir, -max); 
+	var offset = V3.scale(dir, -max*factor); 
 	this.translate(offset.x, offset.y, offset.z);
 }
 
