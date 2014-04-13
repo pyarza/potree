@@ -108,8 +108,12 @@ function PlyLoader(){
  * Once loading is finished, listener.finishedLoading(pointCloud) is called.
  */
 PlyLoader.load = function(source, listener){
+	source = absolutePath(source);
+	
+	
 	var plyFile = new PlyFile();
-	var worker = new Worker("src/loader/PlyLoaderWorker.js");
+//	var worker = new Worker("src/loader/PlyLoaderWorker.js");
+	var worker = createWebWorker("./src/loader/PlyLoaderWorker.js");
 	worker.onmessage = function(event){
 		if(event.data.type === "header"){
 			plyFile.header = PlyLoader.parseHeader(event.data.header);

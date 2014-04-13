@@ -158,4 +158,65 @@ function mouseIsInCanvas(event){
 	return (0 <= nx && nx <= 1) && (0 <= ny && ny <= 1);
 }
 
+/**
+ * 
+ * from stackoverflow user Ryan Kinal
+ * see http://stackoverflow.com/questions/3151436/how-can-i-get-the-current-directory-name-in-javascript
+ */
+function currentPath(){
+	var loc = window.location.pathname;
+	var dir = loc.substring(0, loc.lastIndexOf('/'));
+
+	return window.location.host + dir;
+}
+
+/**
+ * from user allenhwkim at stackoverflow
+ * set http://stackoverflow.com/questions/14780350/convert-relative-path-to-absolute-using-javascript
+ */
+function absolutePath(url) {
+    var link = document.createElement("a");
+    link.href = url;
+    return (link.protocol+"//"+link.host+link.pathname+link.search+link.hash);
+}
+
+
+function loadWebWorkerSource(path){
+	if(Potree.webWorkerSources != null){
+		return Potree.webWorkerSources[path];
+	}else{
+		return load_binary_resource(path);
+	}
+}
+
+/**
+ * with code parts from stackoverflow user Rob W
+ * see http://stackoverflow.com/questions/10343913/how-to-create-a-web-worker-from-a-string
+ * 
+ */
+function createWebWorker(path){
+	var worker = null;
+	if(Potree.singleSource){
+		var source = Potree.webWorkerSources[path];
+		
+		var blob;
+		try {
+		    blob = new Blob([source], {type: 'application/javascript'});
+		} catch (e) { // Backwards-compatibility
+		    window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
+		    blob = new BlobBuilder();
+		    blob.append(response);
+		    blob = blob.getBlob();
+		}
+		worker = new Worker(URL.createObjectURL(blob));
+	}else{
+		worker = new Worker(path);
+	}
+	
+	return worker;
+}
+
+
+
+
 

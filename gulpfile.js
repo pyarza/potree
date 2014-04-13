@@ -7,6 +7,8 @@ var gulp = require('gulp');
 var gutil = require('gulp-util');
 var File = gutil.File;
 var runSequence = require('run-sequence');
+var es = require('event-stream');
+
 
 
 var tap = require('gulp-tap');
@@ -20,6 +22,7 @@ var jshint = require('gulp-jshint');
 var rename = require('gulp-rename');
 var minify = require('gulp-minify-css');
 var htmlreplace = require('gulp-html-replace');
+var insert = require('gulp-insert');
 
 
 var paths = {
@@ -82,9 +85,93 @@ var paths = {
 		"./src/loader/PlyLoader.js",
 		"./src/utils/LRU.js",
 		"./src/Potree.js",
-		"./build/js/shader.js"
+		"./build/js/shader.js",
+		"./build/js/workers.js"
 	]
 };
+
+/**
+ * a list of workers and their dependencies
+ */
+var webWorkers = {
+	"PlyLoaderWorker" : {
+		"path" : "./src/loader/PlyLoaderWorker.js",
+		"sources" : [
+			"./src/loader/PointAttributes.js",
+			"./src/loader/PlyLoader.js",
+			"./src/loader/PlyLoaderWorker.js"
+		]
+	}
+};
+
+/**
+ * create one file in workers build dir for each worker and it's dependencies
+ */
+gulp.task('prepare_workers', function pack_sources(varname, target, sources) {
+	var subtasks = [];
+	for(var workerName in webWorkers){
+		var worker = webWorkers[workerName];
+		var subtask = gulp.src(worker.sources)
+		.pipe(concat(workerName))
+		.pipe(size({showFiles: true}))
+		.pipe(gulp.dest('build/js/workers'))
+		.pipe(size({showFiles: true}))
+		subtasks.push(subtask);
+	}
+	return es.merge.apply(null, subtasks);
+});
+
+/**
+ * merge all workers in the worker build dir into a single file
+ */
+gulp.task('pack_workers', function pack_sources(varname, target, sources) {
+	// Build examples
+	var buffer = [];
+	buffer.push("Potree.webWorkerSources = {");
+	var firstFile = null;
+	var fileName = "workers.js";
+	opt = {};
+	opt.newLine = gutil.linefeed;
+	
+	function bufferContents(file){
+		if (file.isNull()) return; // ignore
+		if (!firstFile) firstFile = file;
+		
+		var workerName = file.relative;
+		var workerPath = webWorkers[workerName].path;
+		
+		var str = file.contents.toString('utf8');
+		str = str.replace(/\\/gm, "\\\\");
+		str = str.replace(/(\r\n|\n|\r)/gm,"\\n");
+		str = str.replace(/"/gm, "\\\"");
+		buffer.push("\"" + workerPath + "\" : \"" + str + "\",");
+	}
+	
+	function endStream(){
+		if (buffer.length === 0) return this.emit('end');
+		
+		var joinedContents = buffer.join(opt.newLine);
+		joinedContents = joinedContents + "\n};";
+		
+		var joinedPath = path.join(firstFile.base, fileName);
+		
+		var joinedFile = new File({
+			cwd: firstFile.cwd,
+			base: firstFile.base,
+			path: joinedPath,
+			contents: new Buffer(joinedContents)
+		});
+		
+		this.emit('data', joinedFile);
+		this.emit('end');
+	}
+
+	return gulp.src("./build/js/workers/*")
+		.pipe(new function (files,t) {return through(bufferContents, endStream)})
+		.pipe(size({showFiles: true}))
+		.pipe(gulp.dest('build/js'));
+});
+
 
 /**
  * modified gulp-replace
@@ -150,6 +237,7 @@ gulp.task('scripts_mjs', function(){
 gulp.task('scripts_potree', function() {
 	return gulp.src(paths.potree)
 		.pipe(concat('potree.js'))
+		.pipe(insert.append('\nPotree.singleSource = true;'))
 		.pipe(size({showFiles: true}))
 		.pipe(gulp.dest('build/js'))
 		.pipe(rename({suffix: '.min'}))
@@ -159,7 +247,7 @@ gulp.task('scripts_potree', function() {
 });
 
 gulp.task('scripts', function(callback){
-	runSequence('pack_shader', 'scripts_mjs', 'scripts_potree', callback);
+	runSequence('pack_shader', 'prepare_workers', 'pack_workers', 'scripts_mjs', 'scripts_potree', callback);
 })
 
 gulp.task('styles', function() {

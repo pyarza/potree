@@ -1,7 +1,10 @@
 
-
-importScripts("PointAttributes.js");
-importScripts("PlyLoader.js");
+// importScripts is only necessary and will only work in the non-single-file version of potree
+try{
+	importScripts("PointAttributes.js");
+	importScripts("PlyLoader.js");
+}catch(e){
+}
 
 self.onmessage = function(message){
 //	postMessage("onmessage");
