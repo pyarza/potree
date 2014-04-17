@@ -105,10 +105,28 @@ function PlyLoader(){
 
 /**
  * Loads source in a background task. 
- * Once loading is finished, listener.finishedLoading(pointCloud) is called.
+ * arg may contain:
+ * - either the property arg.source(an url) or arg.file as the ply data source
+ * - arg.finishedLoading(pointCloud) callback
+ * - arg.pointsLoaded() callback
+ * - arg.fileLoadProgress(percentage) callback 
+ * 
  */
-PlyLoader.load = function(source, listener){
-	source = absolutePath(source);
+PlyLoader.load = function(arg){
+	var source;
+	if(arg.url != null){
+		source = absolutePath(arg.url);
+	}else if(arg.file != null){
+		source = arg.file;
+	}
+	
+	if(arg.pointsLoaded == null) arg.pointsLoaded = function(){};
+	if(arg.finishedLoading == null) arg.finishedLoading = function(pointCloud){
+		if(arg.parent != null){
+			var node = new PointCloudSceneNode("plyNode", arg.parent, pointCloud);
+		}
+	};
+	if(arg.fileLoadProgress == null) arg.fileLoadProgress = function(){};
 	
 	
 	var plyFile = new PlyFile();
@@ -118,7 +136,7 @@ PlyLoader.load = function(source, listener){
 		if(event.data.type === "header"){
 			plyFile.header = PlyLoader.parseHeader(event.data.header);
 		}else if(event.data.type === "progress"){
-			listener.pointsLoaded(event.data.pointsLoaded, plyFile.header.elements[0].size);
+			arg.pointsLoaded(event.data.pointsLoaded, plyFile.header.elements[0].size);
 		}else if(event.data.type === "result"){
 			var pointBuffer = event.data.buffer;
 			var aabb = event.data.aabb;
@@ -133,11 +151,11 @@ PlyLoader.load = function(source, listener){
 			var max = V3.$(aabb.ux, aabb.uy, aabb.uz);
 			pointCloud.aabb.setDimensionByMinMax(min, max);
 			
-			listener.finishedLoading(pointCloud);
+			arg.finishedLoading(pointCloud);
 		}else if(event.data.type === "log"){
 			console.log(event.data.message);
 		}else if(event.data.type === "fileLoadProgress"){
-			listener.fileLoadProgress(event.data.percentage);
+			arg.fileLoadProgress(event.data.percentage);
 		}else{
 			alert(event.data);
 		}

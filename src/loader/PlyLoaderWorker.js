@@ -232,13 +232,6 @@ PlyBinaryWorker.loadFromBinary = function loadFromBinary(plyFile){
 				pointDataView.setFloat32(targetOffset+4, y, true);
 				pointDataView.setFloat32(targetOffset+8, z, true);
 				
-//				if(i <= 100){
-//					var message = "plyOffset: " + plyOffset;
-//					postMessage({"type": "log", "message": message});
-//					message = ("x: " + x + ", y: " + y + ", z: " + z);
-//					postMessage({"type": "log", "message": message});
-//				}
-				
 				if(!isNaN(x) && !isNaN(y) && !isNaN(z)){
 					aabb.lx = Math.min(aabb.lx, x);
 					aabb.ly = Math.min(aabb.ly, y);

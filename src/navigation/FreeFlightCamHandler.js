@@ -91,12 +91,14 @@ FreeFlightCamHandler.prototype.invokeMouseMove = function(event, diffX, diffY){
 };
 
 FreeFlightCamHandler.prototype.invokeMouseDrag = function(event, pressedKeys, diffX, diffY){
+	if(!mouseIsInCanvas(event) || Potree.canvas != document.activeElement){
+		return;
+	}
 	
-	if(pressedKeys.length === 1 && pressedKeys.contains(0) && KeyListener.pressedKeys.contains(18)){
-//		this.camera.translate((this.speedMultiplier * -diffX) / 10.0, (this.speedMultiplier * diffY) / 10.0, 0);
+	if(pressedKeys.length === 1 && pressedKeys.contains(Mouse.left) && event.altKey){
 		this.camera.transform =  M4x4.translate3((this.speedMultiplier * -diffX) / 10.0, (this.speedMultiplier * diffY) / 10.0, 0, this.camera.transform);
 		this.qualityToggle = 0.1;
-	}else if(pressedKeys.length === 1 && pressedKeys.contains(0)){
+	}else if(pressedKeys.length === 1 && pressedKeys.contains(Mouse.left)){
 		var pos = this.camera.localPosition;
 		
 		var toOrigin = M4x4.translate3(-pos[0], -pos[1], -pos[2], M4x4.I);
@@ -107,7 +109,6 @@ FreeFlightCamHandler.prototype.invokeMouseDrag = function(event, pressedKeys, di
 		var transform = M4x4.mul(toOrigin, this.camera.transform);
 		transform = M4x4.mul(rotX, transform);
 		transform = M4x4.mul(backToPos, transform);
-		//this.camera.setTransform(transform);
 		this.camera.transform = transform;
 		
 		
@@ -116,17 +117,12 @@ FreeFlightCamHandler.prototype.invokeMouseDrag = function(event, pressedKeys, di
 		transform = M4x4.mul(backToPos, transform);
 		this.camera.transform = transform;
 		this.qualityToggle = 0.1;
-		
-//		this.camera.transform =  M4x4.translate3(t[0], t[1], t[2], this.camera.transform);
 	} 
 	
 	
 };
 
 FreeFlightCamHandler.prototype.invokeMouseWheel = function(delta){
-//	var amount = -delta / 100.0;
-//	this.camera.translate(0,0,amount);
-	
 	var amount = delta / 2000.0;
 	this.speedMultiplier += amount;
 	this.speedMultiplier = Math.max(0.01, Math.min(10.0, this.speedMultiplier));

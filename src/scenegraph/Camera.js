@@ -64,6 +64,7 @@ Object.defineProperties(Camera.prototype, {
 	},
 	"viewMatrix": {
 		get: function(){
+			this.viewMatrix = this.getInverseGlobalTransformation();
 			return this._viewMatrix;
 		},
 		set: function(viewMatrix){

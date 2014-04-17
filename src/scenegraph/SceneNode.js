@@ -199,6 +199,13 @@ SceneNode.prototype.addChild = function(child) {
 	this.children[child.name] = child;
 };
 
+SceneNode.prototype.removeChild = function(child){
+	if(child.parent == this && this.children[child.name] == child){
+		child.parent = null;
+		delete this.children[child.name];	
+	}
+}
+
 
 /**
  * Liefert das Inverse der lokalen Transformationsmatrix unter der Annahme, dass

@@ -63,6 +63,7 @@ var paths = {
 		"./src/navigation/CamHandler.js",
 		"./src/navigation/FreeFlightCamHandler.js",
 		"./src/navigation/OrbitCamHandler.js",
+		"./src/navigation/EarthCamHandler.js",
 		"./src/Framebuffer.js",
 		"./src/FramebufferFloat32.js",
 		"./src/ResourceManager/ShaderManager.js",

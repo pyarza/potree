@@ -152,10 +152,16 @@ function numbersonly(myfield, e, dec) {
 
 
 function mouseIsInCanvas(event){
-	var nx = event.layerX / Potree.canvas.width;
-	var ny = (Potree.canvas.height - event.layerY) / Potree.canvas.height;
+	var crect = Potree.canvas.getBoundingClientRect();
+	var mx = event.pageX;
+	var my = event.pageY;
 	
-	return (0 <= nx && nx <= 1) && (0 <= ny && ny <= 1);
+	return (crect.left <= mx && mx <= crect.right) && (crect.top <= my && my <= crect.bottom); 
+	
+//	var nx = event.layerX / Potree.canvas.width;
+//	var ny = (Potree.canvas.height - event.layerY) / Potree.canvas.height;
+//	
+//	return (0 <= nx && nx <= 1) && (0 <= ny && ny <= 1);
 }
 
 /**
