@@ -163,18 +163,51 @@ EarthCamHandler.prototype.invokeMouseWheel = function(delta, event){
 		return;
 	}
 	
-	dir = this.clickToCamDirection(event);
-	var d = this.groundPlane.intersectionDistance(this.camera.globalPosition, dir);
-	var dmod = Math.log(d);
-	if(delta < 0){
-		dmod += 0.1;
+	var handler = this;
+	var callback = function(worldPos){
+		var d;
+		var dir = handler.clickToCamDirection(event);
+		if(worldPos == null){
+			
+			d = handler.groundPlane.intersectionDistance(handler.camera.globalPosition, dir);
+			
+		}else{
+			d = V3.length(V3.sub(worldPos, handler.camera.globalPosition));
+		}
+		d = Math.max(1, d);
+		var dmod = Math.log(d);
+		if(delta < 0){
+			dmod += 0.1;
+		}
+		var v = V3.scale(dir, delta*timeSinceLastFrame*handler.zoomSpeed*dmod);
+		var mt = M4x4.makeTranslate3(v.x, v.y, v.z);
+		handler.camera.transform = M4x4.mul(mt, handler.camera.transform);
+		
+		handler.fetchingWorldPos = false;
+		
+	};
+	var arg = {
+		"x" 		: event.layerX,
+		"y" 		: Potree.canvas.height - event.layerY,
+		"width"		: 32,
+		"height"	: 32,
+		"callback"	: callback
 	}
+	this.fetchingWorldPos = true;
+	renderer.worldPosAt(arg);
 	
-	console.log(d);
-	console.log(dmod);
-	var v = V3.scale(dir, delta*timeSinceLastFrame*this.zoomSpeed*dmod);
-	var mt = M4x4.makeTranslate3(v.x, v.y, v.z);
-	this.camera.transform = M4x4.mul(mt, this.camera.transform);
+	
+//	dir = this.clickToCamDirection(event);
+//	var d = this.groundPlane.intersectionDistance(this.camera.globalPosition, dir);
+//	d = Math.max(1, d);
+//	var dmod = Math.log(d);
+//	if(delta < 0){
+//		dmod += 0.1;
+//	}
+//	console.log(dmod);
+//	var v = V3.scale(dir, delta*timeSinceLastFrame*this.zoomSpeed*dmod);
+//	var mt = M4x4.makeTranslate3(v.x, v.y, v.z);
+//	this.camera.transform = M4x4.mul(mt, this.camera.transform);
 };
 
 
