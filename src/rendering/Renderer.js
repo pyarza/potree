@@ -76,6 +76,7 @@ Renderer.prototype._worldPosAt = function(x, y, width, height){
 		linearDepth = Math.abs(V3.transform(V3.$(0,0,expDepth), invProj).z);
 	}
 	
+	
 	var worldPos = null;
 	{ // calculate direction
 		var nx = x / Potree.canvas.width;
@@ -85,7 +86,7 @@ Renderer.prototype._worldPosAt = function(x, y, width, height){
 		var iNear = this.camera.getNearClipIntersection(nx, ny);
 		var fd = V3.length(iFar);
 		var nd = V3.length(iNear);
-		var distance = (linearDepth / this.camera.farClipPlane) * fd;
+		var distance = nd + (linearDepth / this.camera.farClipPlane) * fd;
 		worldPos = V3.add(this.camera.globalPosition, V3.scale(dir,distance));
 	}
 	
@@ -96,7 +97,11 @@ Renderer.prototype._worldPosAt = function(x, y, width, height){
 		gl.viewport(this._viewport[0], this._viewport[1], this._viewport[2],this._viewport[3]);
 	}
 	
-	return worldPos;
+	if(depthOfNearest == null){ 
+		return null;
+	}else{
+		return worldPos;
+	}
 };
 
 Renderer.prototype.clear = function(){

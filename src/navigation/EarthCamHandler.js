@@ -19,6 +19,7 @@ function EarthCamHandler(camera){
 	this.fetchingWorldPos = false;
 	this.transformAtNavigationStart = null;
 	this.originNavigationStart = null;
+	this.groundPlane = new Plane(0, [0,1,0]);
 }
 
 EarthCamHandler.prototype = new CamHandler();
@@ -88,6 +89,9 @@ EarthCamHandler.prototype.invokeMouseDrag = function(event, pressedKeys, diffX, 
 	if(this.fetchingWorldPos){
 		return;
 	}
+	if(this.pivot == null){
+		return;
+	}
 	
 	if(pressedKeys.length == 1 && event.shiftKey && pressedKeys.contains(Mouse.left)){
 		// rotation around pivot
@@ -121,8 +125,22 @@ EarthCamHandler.prototype.invokeMouseDown = function(event){
 	// calculate world position at click location
 	var handler = this;
 	var callback = function(worldPos){
-		handler.pivot = worldPos;
+		
+		if(worldPos == null){
+			var origin = handler.camera.globalPosition;
+			var dir = handler.clickToCamDirection(event);
+			var I = handler.groundPlane.intersection(origin, dir);
+			console.log("distance: " + handler.groundPlane.intersectionDistance(origin, dir) );
+			if(handler.groundPlane.intersectionDistance(origin, dir) > 0){
+				handler.pivot = I;
+			}else{
+				handler.pivot = null;
+			}
+		}else{
+			handler.pivot = worldPos;
+		}
 		handler.fetchingWorldPos = false;
+		
 	};
 	var arg = {
 		"x" 		: event.layerX,
@@ -146,7 +164,15 @@ EarthCamHandler.prototype.invokeMouseWheel = function(delta, event){
 	}
 	
 	dir = this.clickToCamDirection(event);
-	var v = V3.scale(dir, delta*timeSinceLastFrame*this.zoomSpeed);
+	var d = this.groundPlane.intersectionDistance(this.camera.globalPosition, dir);
+	var dmod = Math.log(d);
+	if(delta < 0){
+		dmod += 0.1;
+	}
+	
+	console.log(d);
+	console.log(dmod);
+	var v = V3.scale(dir, delta*timeSinceLastFrame*this.zoomSpeed*dmod);
 	var mt = M4x4.makeTranslate3(v.x, v.y, v.z);
 	this.camera.transform = M4x4.mul(mt, this.camera.transform);
 };
