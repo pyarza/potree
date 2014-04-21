@@ -6,22 +6,29 @@
 	<style>canvas { width: 100%; height: 100% }</style>
 </head>
 <body>
+<!--<body onkeypress="keyHandler(event)">-->
 	<script src="libs/three.js/three.min.js"></script>
 	<script type="text/javascript" src="./src/Potree.js"></script>
 	<script type="text/javascript" >Potree.importScripts("./");</script>
-//	<script src="TrackballControls.js"></script>
 	<script src="libs/three.js/OrbitControls.js"></script>
 	<script>
 		var renderer;
 		var camera;
 		var cube;
 		var scene;
+		var pscene;
+		
+//		function keyHandler(event){
+////			if(event.which == KeyCodes.A ){
+//				MaterialManager.getMaterial("pointCloud").renderMode = PointCloudRenderMode.WEIGHTED_CIRCLE;
+////			}
+//		}
 		
 		function initThree(){
 			scene = new THREE.Scene();
 			camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
 
-			renderer = new THREE.WebGLRenderer();
+			renderer = new THREE.WebGLRenderer({antialias: true});
 			renderer.setSize(window.innerWidth, window.innerHeight);
 			document.body.appendChild(renderer.domElement);
 
@@ -29,18 +36,45 @@
 			var material = new THREE.MeshLambertMaterial({color: 0xdddddd});
 			cube = new THREE.Mesh(geometry, material);
 			scene.add(cube);
-			cube.position = new THREE.Vector3(0,-1,-2.5);
+			cube.position = new THREE.Vector3(0,2,1);
 
-			camera.position.z = 4;
-			camera.position.y = 1;
+			camera.position.z = 10;
+			camera.position.y = 3;
 			
 			var pointLight = new THREE.PointLight(0xffffff);
 			pointLight.position.set(10, 10, 10);
 			scene.add(pointLight);
 			
 			controls = new THREE.OrbitControls(camera);
-			controls.target.set( 0, -2, -4 );
-			camera.lookAt(new THREE.Vector3(0,-2,-4));
+			controls.target.set( 0, 3, 0 );
+			camera.lookAt(new THREE.Vector3(0,3,0));
+			
+			
+			
+			{// grid
+				var material = new THREE.LineBasicMaterial({
+			        color: 0xBBBBBB
+			    });
+				
+				var geometry = new THREE.Geometry();
+				var gridSize = 6;
+				var width = gridSize/2;
+			    for(var i = 0; i <= 6; i++){
+			    	 geometry.vertices.push(new THREE.Vector3(-width, 0, i - width));
+					 geometry.vertices.push(new THREE.Vector3(width, 0, i - width));
+			    }
+			    
+			    for(var i = 0; i <= 6; i++){
+			    	 geometry.vertices.push(new THREE.Vector3(i - width, 0, -width));
+					 geometry.vertices.push(new THREE.Vector3(i - width, 0, width));
+			    }
+			    
+			    
+
+			    var line = new THREE.Line(geometry, material, THREE.LinePieces);
+			    scene.add(line);
+			}
+
 		}
 		
 		function initPotree(){
@@ -48,13 +82,15 @@
 			
 			var cloudURL = "./resources/pointclouds/lion_takanawa/cloud.js";
 			var pcoNode = POCLoader.load(cloudURL);
-			var pscene = Potree.currentScene;
+			pscene = Potree.currentScene;
 			console.log(pscene);
 			pscene.rootNode.addChild(pcoNode);
 			pcoNode.scale(1,-1,1);
 			pcoNode.rotateY(4);
-			pcoNode.translate(-7,0,2);
-			MaterialManager.getMaterial("pointCloud").pointSize = 0.6;
+			pcoNode.translate(-7,5,5);
+			var material = MaterialManager.getMaterial("pointCloud");
+			material.pointSize = 0.5;
+//			material.renderMode = PointCloudRenderMode.FILTERED_SPLAT;
 			
 			pscene.activeCamera = camera;
 			Potree.Settings.frustumCulling = false;
@@ -68,7 +104,7 @@
 			cube.rotation.y += 0.01;
 			
 			renderer.render(scene, camera);
-			Potree.render();
+			Potree.render(pscene, camera);
 		};
 		
 		initThree();

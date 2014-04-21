@@ -298,7 +298,7 @@ FilteredSplatsMaterial.prototype.shadingPass = function(oldBuffer, renderer){
 //	var cColor = Potree.Settings.backgroundColor;
 //	gl.clearColor(cColor[0], cColor[1], cColor[2], cColor[3]);
 	gl.clearColor(0,0,0,1.0);
-	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+//	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	
 	gl.useProgram(this.normalizationShader.program);
 	gl.disable(gl.DEPTH_TEST);
@@ -340,4 +340,7 @@ FilteredSplatsMaterial.prototype.shadingPass = function(oldBuffer, renderer){
 	}else{
 		oldBuffer.drawFullscreenQuad(this.normalizationShader);
 	}
+	
+	gl.disable(gl.BLEND);
+	gl.blendFunc(gl.ONE, gl.ONE);
 };

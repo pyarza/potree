@@ -264,18 +264,17 @@ Potree.initGL = function() {
 /**
  * draws a frame to the canvas
  */
-Potree.draw = function() {
+Potree.draw = function(scene, camera) {
 	if(Potree.renderer == null){
-		Potree.renderer = new Renderer(Potree.currentScene, Framebuffer.getSystemBuffer());
+		Potree.renderer = new Renderer(Framebuffer.getSystemBuffer());
 	}
 	
 	Potree.canvas.width = Potree.canvas.clientWidth;
 	Potree.canvas.height = Potree.canvas.clientHeight;
 
-	var cam = Potree.renderer.scene.activeCamera;
-	cam.aspectRatio = Potree.canvas.clientWidth / Potree.canvas.clientHeight;
+	camera.aspectRatio = Potree.canvas.clientWidth / Potree.canvas.clientHeight;
 	Potree.renderer.viewport(0, 0, Potree.canvas.clientWidth, Potree.canvas.clientHeight);
-	Potree.renderer.render();
+	Potree.renderer.render(scene, camera);
 	
 	for(var i = 0; i < Potree.drawHandlers.length; i++) {
 		var drawHandler = Potree.drawHandlers[i];
@@ -293,11 +292,18 @@ Potree.draw = function() {
 ////	setTimeout(mainLoop, 10);
 //};
 
-Potree.render = function(){
+Potree.render = function(scene, camera){
+	var cam = camera;
+	if(camera instanceof THREE.Camera){
+		cam = new Camera();
+		cam._viewMatrix = camera.matrixWorldInverse.elements;
+		cam._projectionMatrix = camera.projectionMatrix.elements;
+	}
+	
 	Potree.calculateTimeSinceLastFrame();
 	
 	Potree.update(timeSinceLastFrame);
-	Potree.draw();
+	Potree.draw(scene, cam);
 }
 
 var lastLoopTime = null;

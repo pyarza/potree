@@ -4,14 +4,13 @@
  * 
  * @class
  */
-function Renderer(scene, fboColor){
+function Renderer(fboColor){
 	
 	// outputs
 	this.fboColor = fboColor;
 	this.fboDepthAsRGBA = null;
 	
 	// inputs
-	this.scene = scene;
 	this.bgColor = [0, 0, 0, 1];
 	this._viewport = [0, 0, 0, 0];
 	
@@ -29,10 +28,7 @@ Renderer.prototype.worldPosAt = function(worldPosQueueElement){
 	this.worldPosCallbackQueue.push(worldPosQueueElement);
 };
 
-Renderer.prototype._worldPosAt = function(x, y, width, height){
-//	console.log("======");
-//	console.log("worldPosAt(" + x + ", " + y + ", " + width + ", " + height + ")");
-	
+Renderer.prototype._worldPosAt = function(camera, x, y, width, height){
 	var fboColor = this.fboColor;
 	var fboDepthAsRGBA = this.fboDepthAsRGBA;
 	this.fboColor = null;
@@ -72,7 +68,7 @@ Renderer.prototype._worldPosAt = function(x, y, width, height){
 		var v2 = depthOfNearest[2] / 255;
 		var v3 = depthOfNearest[3] / 255;
 		var expDepth = (v0/(256*256*256) + v1/(256*256) + v2/256 + v3);
-		var invProj = this.camera.inverseProjectionMatrix;
+		var invProj = camera.inverseProjectionMatrix;
 		linearDepth = Math.abs(V3.transform(V3.$(0,0,expDepth), invProj).z);
 	}
 	
@@ -81,13 +77,13 @@ Renderer.prototype._worldPosAt = function(x, y, width, height){
 	{ // calculate direction
 		var nx = x / Potree.canvas.width;
 		var ny = y / Potree.canvas.height;
-		var dir = this.camera.getDirection(nx, ny);
-		var iFar = this.camera.getFarClipIntersection(nx, ny);
-		var iNear = this.camera.getNearClipIntersection(nx, ny);
+		var dir = camera.getDirection(nx, ny);
+		var iFar = camera.getFarClipIntersection(nx, ny);
+		var iNear = camera.getNearClipIntersection(nx, ny);
 		var fd = V3.length(iFar);
 		var nd = V3.length(iNear);
-		var distance = nd + (linearDepth / this.camera.farClipPlane) * fd;
-		worldPos = V3.add(this.camera.globalPosition, V3.scale(dir,distance));
+		var distance = nd + (linearDepth / camera.farClipPlane) * fd;
+		worldPos = V3.add(camera.globalPosition, V3.scale(dir,distance));
 	}
 	
 	{ // reset fbos
@@ -112,17 +108,15 @@ Renderer.prototype.clear = function(){
 	}
 };
 
-Renderer.prototype.render = function(){
-//	this.clear();
-	
+Renderer.prototype.render = function(scene, camera){
+	this.camera = camera;
 	this.lights = new Array();
 	var pointClouds = new Array();
 	var pointCloudOctrees = new Array();
 	var meshes = new Array();
-	this.camera = this.scene.activeCamera;
 	
 	var stack = new Array();
-	stack.push(this.scene.rootNode);
+	stack.push(scene.rootNode);
 	while(stack.length > 0){
 		var node = stack.pop();
 		for(var i in node.children){
@@ -161,7 +155,7 @@ Renderer.prototype.render = function(){
 	if(this.fboDepthAsRGBA == null){
 		for(var i = 0; i < this.worldPosCallbackQueue.length; i++){
 			var q = this.worldPosCallbackQueue[i];
-			var worldPos = this._worldPosAt(q.x, q.y, q.width, q.height);
+			var worldPos = this._worldPosAt(q.camera, q.x, q.y, q.width, q.height);
 			q.callback(worldPos);
 		}
 		this.worldPosCallbackQueue.length = 0;

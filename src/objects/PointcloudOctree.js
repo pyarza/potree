@@ -114,7 +114,7 @@ PointcloudOctree.prototype.prepareRender = function prepareRender(pocSceneNode, 
 	stack.length = 0;
 	stack.push(this.rootNode);
 	
-	var view = camera.matrixWorldInverse.elements;
+	var view = camera.viewMatrix;
 	var frustum = null;
 	if(Potree.Settings.frustumCulling){
 		frustum = camera.frustum;

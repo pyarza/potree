@@ -17,7 +17,7 @@ function PointcloudOctreeSceneNode(mno, parent){
 PointcloudOctreeSceneNode.prototype = new SceneNode(inheriting);
 PointcloudOctreeSceneNode.base = SceneNode.prototype;
 
-PointcloudOctreeSceneNode.prototype.render = function(camera, lights) {
+PointcloudOctreeSceneNode.prototype.render = function(renderer) {
 
 	if(this.mno == null){
 		return;
@@ -26,7 +26,7 @@ PointcloudOctreeSceneNode.prototype.render = function(camera, lights) {
 		return;
 	}
 
-	this.mno.render(this, camera, lights);
+	this.mno.render(this, renderer);
 };
 
 PointcloudOctreeSceneNode.prototype.addTime = function addTime(time){
