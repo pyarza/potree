@@ -9,6 +9,8 @@
 	<script src="libs/three.js/three.min.js"></script>
 	<script type="text/javascript" src="./src/Potree.js"></script>
 	<script type="text/javascript" >Potree.importScripts("./");</script>
+//	<script src="TrackballControls.js"></script>
+	<script src="libs/three.js/OrbitControls.js"></script>
 	<script>
 		var renderer;
 		var camera;
@@ -35,6 +37,10 @@
 			var pointLight = new THREE.PointLight(0xffffff);
 			pointLight.position.set(10, 10, 10);
 			scene.add(pointLight);
+			
+			controls = new THREE.OrbitControls(camera);
+			controls.target.set( 0, -2, -4 );
+			camera.lookAt(new THREE.Vector3(0,-2,-4));
 		}
 		
 		function initPotree(){
@@ -62,8 +68,6 @@
 			cube.rotation.y += 0.01;
 			
 			renderer.render(scene, camera);
-			
-			camera.viewMatrix = camera.matrixWorldInverse;
 			Potree.render();
 		};
 		

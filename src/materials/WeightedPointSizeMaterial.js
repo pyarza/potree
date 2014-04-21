@@ -62,7 +62,7 @@ WeightedPointSizeMaterial.prototype.renderPointCloudsDepthAsRGBA = function rend
 	
 	{ // uniforms
 		gl.uniformMatrix4fv(uniforms.uWorld, false, transform);
-		gl.uniformMatrix4fv(uniforms.uView, false, camera.viewMatrix.elements);
+		gl.uniformMatrix4fv(uniforms.uView, false, camera.matrixWorldInverse.elements);
 		gl.uniformMatrix4fv(uniforms.uProj, false, camera.projectionMatrix.elements);
 		gl.uniform1f(uniforms.uPointSizeMultiplicator, this.pointSize);
 		gl.uniform2f(uniforms.uViewportSize, Potree.canvas.clientWidth, Potree.canvas.clientHeight);
@@ -107,7 +107,7 @@ WeightedPointSizeMaterial.prototype.renderPointCloudsPosition = function renderP
 		
 		{ // uniforms
 			gl.uniformMatrix4fv(this.posShader.uniforms.uWorld, false, transform);
-			gl.uniformMatrix4fv(this.posShader.uniforms.uView, false, camera.viewMatrix);
+			gl.uniformMatrix4fv(this.posShader.uniforms.uView, false, camera.matrixWorldInverse.elements);
 			gl.uniformMatrix4fv(this.posShader.uniforms.uProj, false, camera.projectionMatrix);
 			gl.uniform1f(this.posShader.uniforms.uPointSizeMultiplicator, this.pointSize);
 			gl.uniform2f(this.posShader.uniforms.uViewportSize, Potree.canvas.clientWidth, Potree.canvas.clientHeight);
@@ -146,7 +146,7 @@ WeightedPointSizeMaterial.prototype.renderPointClouds = function renderPointClou
 		
 		{ // uniforms
 			gl.uniformMatrix4fv(this.shader.uniforms.uWorld, false, transform);
-			gl.uniformMatrix4fv(this.shader.uniforms.uView, false, camera.viewMatrix.elements);
+			gl.uniformMatrix4fv(this.shader.uniforms.uView, false, camera.matrixWorldInverse.elements);
 			gl.uniformMatrix4fv(this.shader.uniforms.uProj, false, camera.projectionMatrix.elements);
 			gl.uniform1f(this.shader.uniforms.uPointSizeMultiplicator, this.pointSize);
 			gl.uniform2f(this.shader.uniforms.uViewportSize, Potree.canvas.clientWidth, Potree.canvas.clientHeight);

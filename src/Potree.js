@@ -183,19 +183,19 @@ Potree.init = function(canvas) {
 	}
 	
 	
-	{// install cam handler
-		Potree.camHandler = new FreeFlightCamHandler(Potree.currentScene.activeCamera);
-		MouseListener.addListener(Potree.camHandler);
-		canvas.onfocus = function(){
-			KeyListener.addListener(Potree.camHandler);
-			MouseListener.addListener(Potree.camHandler);
-		};
-	
-		canvas.onblur= function(){
-			KeyListener.removeListener(Potree.camHandler);
-			MouseListener.removeListener(Potree.camHandler);
-		};
-	}
+//	{// install cam handler
+//		Potree.camHandler = new FreeFlightCamHandler(Potree.currentScene.activeCamera);
+//		MouseListener.addListener(Potree.camHandler);
+//		canvas.onfocus = function(){
+//			KeyListener.addListener(Potree.camHandler);
+//			MouseListener.addListener(Potree.camHandler);
+//		};
+//	
+//		canvas.onblur= function(){
+//			KeyListener.removeListener(Potree.camHandler);
+//			MouseListener.removeListener(Potree.camHandler);
+//		};
+//	}
 	
 	Potree.initialized = true;
 	
@@ -333,7 +333,9 @@ Potree.update = function update(time){
 	Potree.currentScene.rootNode.addTime(time);
 	PointcloudOctreeNode.nodesLoadedThisFrame = 0;
 	
-	Potree.camHandler.addTime(time);
+	if(Potree.camHandler != null){
+		Potree.camHandler.addTime(time);
+	}
 	
 	for(i = 0; i < Potree.updateHandlers.length; i++) {
 		var updateHandler = Potree.updateHandlers[i];
