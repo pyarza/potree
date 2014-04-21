@@ -89,7 +89,7 @@ Potree.canvas = null;
 Potree.initialized = false;
 Potree.updateHandlers = [];
 Potree.drawHandlers = [];
-var renderer = null;
+Potree.renderer = null;
 Potree.fpsHistory = [];
 Potree.fps = 0;
 
@@ -265,17 +265,17 @@ Potree.initGL = function() {
  * draws a frame to the canvas
  */
 Potree.draw = function() {
-	if(renderer == null){
-		renderer = new Renderer(Potree.currentScene, Framebuffer.getSystemBuffer());
+	if(Potree.renderer == null){
+		Potree.renderer = new Renderer(Potree.currentScene, Framebuffer.getSystemBuffer());
 	}
 	
 	Potree.canvas.width = Potree.canvas.clientWidth;
 	Potree.canvas.height = Potree.canvas.clientHeight;
 
-	var cam = renderer.scene.activeCamera;
+	var cam = Potree.renderer.scene.activeCamera;
 	cam.aspectRatio = Potree.canvas.clientWidth / Potree.canvas.clientHeight;
-	renderer.viewport(0, 0, Potree.canvas.clientWidth, Potree.canvas.clientHeight);
-	renderer.render();
+	Potree.renderer.viewport(0, 0, Potree.canvas.clientWidth, Potree.canvas.clientHeight);
+	Potree.renderer.render();
 	
 	for(var i = 0; i < Potree.drawHandlers.length; i++) {
 		var drawHandler = Potree.drawHandlers[i];
@@ -283,15 +283,22 @@ Potree.draw = function() {
 	}
 };
 
-Potree.mainLoop = function mainLoop(){
+//Potree.mainLoop = function mainLoop(){
+//	Potree.calculateTimeSinceLastFrame();
+//	
+//	Potree.update(timeSinceLastFrame);
+//	Potree.draw();
+//	
+//	// with 0ms, interaction becomes a lot slower in firefox.
+////	setTimeout(mainLoop, 10);
+//};
+
+Potree.render = function(){
 	Potree.calculateTimeSinceLastFrame();
 	
 	Potree.update(timeSinceLastFrame);
 	Potree.draw();
-	
-	// with 0ms, interaction becomes a lot slower in firefox.
-//	setTimeout(mainLoop, 10);
-};
+}
 
 var lastLoopTime = null;
 var timeSinceLastFrame = null;

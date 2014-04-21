@@ -113,7 +113,7 @@ Renderer.prototype.clear = function(){
 };
 
 Renderer.prototype.render = function(){
-	this.clear();
+//	this.clear();
 	
 	this.lights = new Array();
 	var pointClouds = new Array();
