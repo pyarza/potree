@@ -27,7 +27,7 @@
 			var material = new THREE.MeshLambertMaterial({color: 0xdddddd});
 			cube = new THREE.Mesh(geometry, material);
 			scene.add(cube);
-			cube.position = new THREE.Vector3();
+			cube.position = new THREE.Vector3(0,-1,-2.5);
 
 			camera.position.z = 4;
 			camera.position.y = 1;
@@ -40,20 +40,15 @@
 		function initPotree(){
 			Potree.init(renderer.domElement);
 			
-			var cloudURL = "./resources/pointclouds_link/converted/tree_trunk/cloud.js";
+			var cloudURL = "./resources/pointclouds/lion_takanawa/cloud.js";
 			var pcoNode = POCLoader.load(cloudURL);
 			var pscene = Potree.currentScene;
 			console.log(pscene);
 			pscene.rootNode.addChild(pcoNode);
-			pcoNode.translate(0,-pcoNode.aabb.min.y,0);
-			pcoNode.translate(15,0,0);
-			
-			var cam = pscene.activeCamera;
-			cam.translate(0,0,4);
-			pcoNode.translate(-12,-8,0);
-			pcoNode.rotateY(3);
-			pcoNode.scale(0.3,0.3,0.3);
-			MaterialManager.getMaterial("pointCloud").pointSize = 0.2;
+			pcoNode.scale(1,-1,1);
+			pcoNode.rotateY(4);
+			pcoNode.translate(-7,0,2);
+			MaterialManager.getMaterial("pointCloud").pointSize = 0.6;
 			
 			pscene.activeCamera = camera;
 			Potree.Settings.frustumCulling = false;
