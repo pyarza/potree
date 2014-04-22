@@ -208,8 +208,6 @@ PointcloudOctreeNode.loadCloudAjax = function loadPOCCloudAjax(node) {
 };
 
 PointcloudOctreeNode.loadCloudData = function(node, buffer, url) {
-	PointcloudOctreeNode.nodesLoadedThisFrame++;
-
 	var pointCloud = new PointCloud(url, node.poc.pointAttributes);
 	pointCloud.setVertexBufferData(buffer);
 	pointCloud.size = buffer.byteLength / node.poc.pointAttributes.byteSize;
@@ -219,5 +217,38 @@ PointcloudOctreeNode.loadCloudData = function(node, buffer, url) {
 	node.isLoading = false;
 	PointcloudOctreeNode.loadingNodes.remove(node);
 	node.poc.nodesBeeingLoaded.remove(node);
+	
+//	var floatView = new Float32Array(buffer);
+//	var uintView = new Uint8Array(buffer);
+//	
+//	var numPoints = buffer.byteLength / node.poc.pointAttributes.byteSize;
+//	var geometry = new THREE.BufferGeometry();
+//	geometry.addAttribute( 'position', Float32Array, numPoints, 3 );
+//	geometry.addAttribute( 'color', Float32Array, numPoints, 3 );
+//	var positions = geometry.attributes.position.array;
+//	var colors = geometry.attributes.color.array;
+//	var color = new THREE.Color();
+//	for(var i = 0; i < numPoints; i++){
+//		positions[3*i] = floatView[i*4];
+//		positions[3*i+1] = floatView[i*4+1];
+//		positions[3*i+2] = floatView[i*4+2];
+//		
+//		color.setRGB(uintView[i*16+12], uintView[i*16+13], uintView[i*16+14]);
+//		colors[3*i] = color.r/255;
+//		colors[3*i+1] = color.g/255;
+//		colors[3*i+2] = color.b/255;
+//	}
+//	geometry.computeBoundingSphere();
+//	
+//	var material = new THREE.ParticleSystemMaterial( { size: 0.02, vertexColors: true } );
+//	pointcloud = new THREE.ParticleSystem( geometry, material );
+//	scene.add(pointcloud);
+//	
+//	PointcloudOctreeNode.lruNodes.touch(node);
+//	node.isLoading = false;
+//	PointcloudOctreeNode.loadingNodes.remove(node);
+//	node.poc.nodesBeeingLoaded.remove(node);
+//	
+//	node.pointCloud = pointcloud;
 };
 

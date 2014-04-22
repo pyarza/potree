@@ -168,7 +168,7 @@ Potree.init = function(canvas) {
 	}
 	
 	Potree.renderer = new Renderer(Framebuffer.getSystemBuffer());
-	
+//	
 //	{// register mouse and key listener
 //		var mousewheelevt=(/Firefox/i.test(navigator.userAgent))? "DOMMouseScroll" : "mousewheel"; //FF doesn't recognize mousewheel as of FF3.x
 //		if (document.attachEvent){ //if IE (and Opera depending on user setting)
@@ -294,7 +294,6 @@ Potree.threejsToPotreeCamera = function(camera){
 	pCamera.nearClipPLane = camera.near;
 	pCamera.farClipPlane = camera.far;
 	pCamera.updateProjectionMatrix();
-//	pCamera.projectionMatrix = camera.projectionMatrix.elements;
 	
 	return pCamera;
 }

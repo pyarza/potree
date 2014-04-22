@@ -6,7 +6,8 @@
  * @augments CamHandler
  * @author Markus Schuetz
  */
-function EarthCamHandler(camera){
+function EarthCamHandler(scene, camera){
+	this.scene = scene;
 	this.camera = camera;
 	
 	this.velocity = [0,0,0];
@@ -130,7 +131,6 @@ EarthCamHandler.prototype.invokeMouseDown = function(event){
 			var origin = handler.camera.globalPosition;
 			var dir = handler.clickToCamDirection(event);
 			var I = handler.groundPlane.intersection(origin, dir);
-			console.log("distance: " + handler.groundPlane.intersectionDistance(origin, dir) );
 			if(handler.groundPlane.intersectionDistance(origin, dir) > 0){
 				handler.pivot = I;
 			}else{
@@ -147,10 +147,12 @@ EarthCamHandler.prototype.invokeMouseDown = function(event){
 		"y" 		: Potree.canvas.height - event.layerY,
 		"width"		: 32,
 		"height"	: 32,
-		"callback"	: callback
+		"callback"	: callback,
+		"camera"	: this.camera,
+		"scene"		: this.scene
 	}
 	this.fetchingWorldPos = true;
-	renderer.worldPosAt(arg);
+	Potree.renderer.worldPosAt(arg);
 	
 	return mouseIsInCanvas(event);
 }
@@ -191,23 +193,12 @@ EarthCamHandler.prototype.invokeMouseWheel = function(delta, event){
 		"y" 		: Potree.canvas.height - event.layerY,
 		"width"		: 32,
 		"height"	: 32,
-		"callback"	: callback
+		"callback"	: callback,
+		"camera"	: this.camera,
+		"scene"		: this.scene
 	}
 	this.fetchingWorldPos = true;
-	renderer.worldPosAt(arg);
-	
-	
-//	dir = this.clickToCamDirection(event);
-//	var d = this.groundPlane.intersectionDistance(this.camera.globalPosition, dir);
-//	d = Math.max(1, d);
-//	var dmod = Math.log(d);
-//	if(delta < 0){
-//		dmod += 0.1;
-//	}
-//	console.log(dmod);
-//	var v = V3.scale(dir, delta*timeSinceLastFrame*this.zoomSpeed*dmod);
-//	var mt = M4x4.makeTranslate3(v.x, v.y, v.z);
-//	this.camera.transform = M4x4.mul(mt, this.camera.transform);
+	Potree.renderer.worldPosAt(arg);
 };
 
 
