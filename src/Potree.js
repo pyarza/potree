@@ -167,22 +167,24 @@ Potree.init = function(canvas) {
 		return false;
 	}
 	
-	{// register mouse and key listener
-		var mousewheelevt=(/Firefox/i.test(navigator.userAgent))? "DOMMouseScroll" : "mousewheel"; //FF doesn't recognize mousewheel as of FF3.x
-		if (document.attachEvent){ //if IE (and Opera depending on user setting)
-			document.attachEvent("on"+mousewheelevt,MouseListener.mouseWheel);
-		} else if (document.addEventListener){ //WC3 browsers
-			document.addEventListener(mousewheelevt, MouseListener.mouseWheel, false);
-		}
-		document.onkeydown = KeyListener.keyDown;
-		document.onkeyup = KeyListener.keyUp;
-		document.onkeypress = KeyListener.keyPress;
-		document.onmousedown = MouseListener.mouseDown;
-		document.onmouseup = MouseListener.mouseUp;
-		document.onmousemove = MouseListener.mouseMove;
-	}
+	Potree.renderer = new Renderer(Framebuffer.getSystemBuffer());
 	
-	
+//	{// register mouse and key listener
+//		var mousewheelevt=(/Firefox/i.test(navigator.userAgent))? "DOMMouseScroll" : "mousewheel"; //FF doesn't recognize mousewheel as of FF3.x
+//		if (document.attachEvent){ //if IE (and Opera depending on user setting)
+//			document.attachEvent("on"+mousewheelevt,MouseListener.mouseWheel);
+//		} else if (document.addEventListener){ //WC3 browsers
+//			document.addEventListener(mousewheelevt, MouseListener.mouseWheel, false);
+//		}
+//		document.onkeydown = KeyListener.keyDown;
+//		document.onkeyup = KeyListener.keyUp;
+//		document.onkeypress = KeyListener.keyPress;
+//		document.onmousedown = MouseListener.mouseDown;
+//		document.onmouseup = MouseListener.mouseUp;
+//		document.onmousemove = MouseListener.mouseMove;
+//	}
+//	
+//	
 //	{// install cam handler
 //		Potree.camHandler = new FreeFlightCamHandler(Potree.currentScene.activeCamera);
 //		MouseListener.addListener(Potree.camHandler);
@@ -265,15 +267,15 @@ Potree.initGL = function() {
  * draws a frame to the canvas
  */
 Potree.draw = function(scene, camera) {
-	if(Potree.renderer == null){
-		Potree.renderer = new Renderer(Framebuffer.getSystemBuffer());
-	}
+//	if(Potree.renderer == null){
+//		Potree.renderer = new Renderer(Framebuffer.getSystemBuffer());
+//	}
 	
 	Potree.canvas.width = Potree.canvas.clientWidth;
 	Potree.canvas.height = Potree.canvas.clientHeight;
 
-	camera.aspectRatio = Potree.canvas.clientWidth / Potree.canvas.clientHeight;
-	Potree.renderer.viewport(0, 0, Potree.canvas.clientWidth, Potree.canvas.clientHeight);
+//	camera.aspectRatio = Potree.canvas.clientWidth / Potree.canvas.clientHeight;
+//	Potree.renderer.viewport(0, 0, Potree.canvas.clientWidth, Potree.canvas.clientHeight);
 	Potree.renderer.render(scene, camera);
 	
 	for(var i = 0; i < Potree.drawHandlers.length; i++) {
@@ -282,22 +284,25 @@ Potree.draw = function(scene, camera) {
 	}
 };
 
-//Potree.mainLoop = function mainLoop(){
-//	Potree.calculateTimeSinceLastFrame();
-//	
-//	Potree.update(timeSinceLastFrame);
-//	Potree.draw();
-//	
-//	// with 0ms, interaction becomes a lot slower in firefox.
-////	setTimeout(mainLoop, 10);
-//};
+Potree.threejsToPotreeCamera = function(camera){
+	var pCamera = new Camera();
+	pCamera._viewMatrix = camera.matrixWorldInverse.elements;
+	pCamera._transform = camera.matrixWorld.elements;
+	
+	pCamera.fieldOfView = camera.fov;
+	pCamera.aspectRatio = camera.aspect;
+	pCamera.nearClipPLane = camera.near;
+	pCamera.farClipPlane = camera.far;
+	pCamera.updateProjectionMatrix();
+//	pCamera.projectionMatrix = camera.projectionMatrix.elements;
+	
+	return pCamera;
+}
 
 Potree.render = function(scene, camera){
 	var cam = camera;
 	if(camera instanceof THREE.Camera){
-		cam = new Camera();
-		cam._viewMatrix = camera.matrixWorldInverse.elements;
-		cam._projectionMatrix = camera.projectionMatrix.elements;
+		cam = Potree.threejsToPotreeCamera(camera);
 	}
 	
 	Potree.calculateTimeSinceLastFrame();

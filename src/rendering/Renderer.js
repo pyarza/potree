@@ -28,7 +28,7 @@ Renderer.prototype.worldPosAt = function(worldPosQueueElement){
 	this.worldPosCallbackQueue.push(worldPosQueueElement);
 };
 
-Renderer.prototype._worldPosAt = function(camera, x, y, width, height){
+Renderer.prototype._worldPosAt = function(scene, camera, x, y, width, height){
 	var fboColor = this.fboColor;
 	var fboDepthAsRGBA = this.fboDepthAsRGBA;
 	this.fboColor = null;
@@ -42,7 +42,7 @@ Renderer.prototype._worldPosAt = function(camera, x, y, width, height){
 	gl.enable(gl.SCISSOR_TEST);
 	gl.scissor(x-width/2, y-width/2, width, height);
 	this.fboDepthAsRGBA = this.fboWorldPosAt;
-	this.render();
+	this.render(scene, camera);
 	
 	var pixels = new Uint8Array(width*height*4);
 	gl.readPixels(x-width/2, y-height/2, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
@@ -155,7 +155,7 @@ Renderer.prototype.render = function(scene, camera){
 	if(this.fboDepthAsRGBA == null){
 		for(var i = 0; i < this.worldPosCallbackQueue.length; i++){
 			var q = this.worldPosCallbackQueue[i];
-			var worldPos = this._worldPosAt(q.camera, q.x, q.y, q.width, q.height);
+			var worldPos = this._worldPosAt(q.scene, q.camera, q.x, q.y, q.width, q.height);
 			q.callback(worldPos);
 		}
 		this.worldPosCallbackQueue.length = 0;

@@ -6,11 +6,14 @@
 	<style>canvas { width: 100%; height: 100% }</style>
 </head>
 <body>
-<!--<body onkeypress="keyHandler(event)">-->
+	<div id="canvas" style="margin: 0px; padding: 0px;">
+	
+	</div>
 	<script src="libs/three.js/three.min.js"></script>
 	<script type="text/javascript" src="./src/Potree.js"></script>
 	<script type="text/javascript" >Potree.importScripts("./");</script>
 	<script src="libs/three.js/OrbitControls.js"></script>
+	<script src="libs/three.js/InterleavedBufferGeometry.js"></script>
 	<script>
 		var renderer;
 		var camera;
@@ -18,72 +21,106 @@
 		var scene;
 		var pscene;
 		
-//		function keyHandler(event){
-////			if(event.which == KeyCodes.A ){
-//				MaterialManager.getMaterial("pointCloud").renderMode = PointCloudRenderMode.WEIGHTED_CIRCLE;
-////			}
-//		}
+		function mouseDown(event){
+			alert("test");
+		}
 		
 		function initThree(){
 			scene = new THREE.Scene();
-			camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
 
 			renderer = new THREE.WebGLRenderer({antialias: true});
 			renderer.setSize(window.innerWidth, window.innerHeight);
-			document.body.appendChild(renderer.domElement);
+			renderer.shadowMapEnabled = true;
+//			document.body.appendChild(renderer.domElement);
+			var canvas = document.getElementById("canvas");
+			canvas.appendChild(renderer.domElement);;
+			camera = new THREE.PerspectiveCamera(75, canvas.clientWidth/canvas.clientHeight, 0.1, 1000);
+//			camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
 
-			var geometry = new THREE.CubeGeometry(1,1,1);
-			var material = new THREE.MeshLambertMaterial({color: 0xdddddd});
-			cube = new THREE.Mesh(geometry, material);
-			scene.add(cube);
-			cube.position = new THREE.Vector3(0,2,1);
-
-			camera.position.z = 10;
-			camera.position.y = 3;
+			{ // cube
+				var geometry = new THREE.CubeGeometry(8,0.6,8);
+				var material = new THREE.MeshLambertMaterial({color: 0xaaaaa});
+				cube = new THREE.Mesh(geometry, material);
+				scene.add(cube);
+				cube.position = new THREE.Vector3(-0.5,0.3,-1);
+				cube.castShadow = true;
+				cube.receiveShadow = true;
+	
+				camera.position.z = 10;
+				camera.position.y = 3;
+			}
 			
-			var pointLight = new THREE.PointLight(0xffffff);
-			pointLight.position.set(10, 10, 10);
-			scene.add(pointLight);
+			{ // spotlight
+				var pointLight = new THREE.PointLight(0xffffff);
+				pointLight.position.set(10, 10, 10);
+				pointLight.shadowDarkness = 0.5;
+				scene.add(pointLight);
+			}
+			
+			{ // directional light with shadows
+				var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+				directionalLight.position.set( 10, 10, 10 );
+				directionalLight.target.position.set(0, 0, 0);
+				directionalLight.castShadow = true;
+				directionalLight.shadowDarkness = 0.5;
+				directionalLight.shadowCameraNear = 0;
+				directionalLight.shadowCameraFar = 30;
+				 
+				directionalLight.shadowCameraLeft = -8;
+				directionalLight.shadowCameraRight = 8;
+				directionalLight.shadowCameraTop = 8;
+				directionalLight.shadowCameraBottom = -8;
+//				directionalLight.shadowCameraVisible = true;
+				scene.add(directionalLight);
+			}
 			
 			controls = new THREE.OrbitControls(camera);
 			controls.target.set( 0, 3, 0 );
 			camera.lookAt(new THREE.Vector3(0,3,0));
 			
+			scene.add(createGrid(15, 15, 2));
 			
-			
-			{// grid
-				var material = new THREE.LineBasicMaterial({
-			        color: 0xBBBBBB
-			    });
-				
-				var geometry = new THREE.Geometry();
-				var gridSize = 6;
-				var width = gridSize/2;
-			    for(var i = 0; i <= 6; i++){
-			    	 geometry.vertices.push(new THREE.Vector3(-width, 0, i - width));
-					 geometry.vertices.push(new THREE.Vector3(width, 0, i - width));
-			    }
-			    
-			    for(var i = 0; i <= 6; i++){
-			    	 geometry.vertices.push(new THREE.Vector3(i - width, 0, -width));
-					 geometry.vertices.push(new THREE.Vector3(i - width, 0, width));
-			    }
-			    
-			    
-
-			    var line = new THREE.Line(geometry, material, THREE.LinePieces);
-			    scene.add(line);
+			{ // plane
+				var planeMaterial = new THREE.MeshLambertMaterial({color: 0xaaccdd});
+				var plane = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), planeMaterial);
+				plane.rotation.x = -Math.PI / 2;
+				plane.overdraw = true;
+				plane.receiveShadow = true;
+				scene.add(plane);
 			}
-
+			
+//			scene.add(generatePointcloud());
+		}
+		
+		function createGrid(width, length, spacing){
+			var material = new THREE.LineBasicMaterial({
+		        color: 0xBBBBBB
+		    });
+			
+			var geometry = new THREE.Geometry();
+		    for(var i = 0; i <= length; i++){
+		    	 geometry.vertices.push(new THREE.Vector3(-(spacing*width)/2, 0, i*spacing-(spacing*length)/2));
+				 geometry.vertices.push(new THREE.Vector3(+(spacing*width)/2, 0, i*spacing-(spacing*length)/2));
+		    }
+		    
+		    for(var i = 0; i <= width; i++){
+		    	 geometry.vertices.push(new THREE.Vector3(i*spacing-(spacing*width)/2, 0, -(spacing*length)/2));
+				 geometry.vertices.push(new THREE.Vector3(i*spacing-(spacing*width)/2, 0, +(spacing*length)/2));
+		    }
+		    
+		    var line = new THREE.Line(geometry, material, THREE.LinePieces);
+		    line.receiveShadow = true;
+		    return line;
 		}
 		
 		function initPotree(){
 			Potree.init(renderer.domElement);
+			Potree.renderer.viewport(renderer._viewportX, renderer._viewportY, renderer._viewportWidth, renderer._viewportHeight);
 			
 			var cloudURL = "./resources/pointclouds/lion_takanawa/cloud.js";
 			var pcoNode = POCLoader.load(cloudURL);
 			pscene = Potree.currentScene;
-			console.log(pscene);
+			
 			pscene.rootNode.addChild(pcoNode);
 			pcoNode.scale(1,-1,1);
 			pcoNode.rotateY(4);
@@ -95,15 +132,95 @@
 			pscene.activeCamera = camera;
 			Potree.Settings.frustumCulling = false;
 			
+//			PlyLoader.load({
+//				"url": 			"./resources/pointclouds/lion_takanawa.ply",
+//				"finishedLoading": 	function(pointcloud, buffer){
+//					var floatView = new Float32Array(buffer);
+//					var uintView = new Uint8Array(buffer);
+//					
+//					var particles = 400000;
+//					var geometry = new THREE.BufferGeometry();
+//					geometry.addAttribute( 'position', Float32Array, particles, 3 );
+//					geometry.addAttribute( 'color', Float32Array, particles, 3 );
+//					var positions = geometry.attributes.position.array;
+//					var colors = geometry.attributes.color.array;
+//					var color = new THREE.Color();
+//					for(var i = 0; i < particles; i++){
+//						positions[3*i] = floatView[i*4];
+//						positions[3*i+1] = floatView[i*4+1];
+//						positions[3*i+2] = floatView[i*4+2];
+//						
+//						color.setRGB(uintView[i*16+12], uintView[i*16+13], uintView[i*16+14]);
+//						colors[3*i] = color.r/255;
+//						colors[3*i+1] = color.g/255;
+//						colors[3*i+2] = color.b/255;
+//					}
+//					geometry.computeBoundingSphere();
+//					
+//					var material = new THREE.ParticleSystemMaterial( { size: 0.02, vertexColors: true } );
+//					particleSystem = new THREE.ParticleSystem( geometry, material );
+//					particleSystem.scale.set(1,-1,1);
+//					particleSystem.rotation.y = 4;
+//					particleSystem.position.x = -7;
+//					particleSystem.position.y = 5;
+//					particleSystem.position.z = 5;
+//					particleSystem.castShadow = true;
+//					scene.add(particleSystem);
+//				}
+//			});
+		}
+		
+		function generatePointcloud(){
+			var particles = 500000;
+			var geometry = new THREE.BufferGeometry();
+			geometry.addAttribute( 'position', Float32Array, particles, 3 );
+			geometry.addAttribute( 'color', Float32Array, particles, 3 );
+
+			var positions = geometry.attributes.position.array;
+			var colors = geometry.attributes.color.array;
+
+			var color = new THREE.Color();
+			var n = 1000, n2 = n / 2; // particles spread in the cube
+			for ( var i = 0; i < positions.length; i += 3 ) {
+				// positions
+				var x = Math.random() * n - n2;
+				var y = Math.random() * n - n2;
+				var z = Math.random() * n - n2;
+
+				positions[ i ]     = x;
+				positions[ i + 1 ] = y;
+				positions[ i + 2 ] = z;
+
+				// colors
+				var vx = ( x / n ) + 0.5;
+				var vy = ( y / n ) + 0.5;
+				var vz = ( z / n ) + 0.5;
+				color.setRGB( vx, vy, vz );
+				colors[ i ]     = color.r;
+				colors[ i + 1 ] = color.g;
+				colors[ i + 2 ] = color.b;
+			}
+			
+			geometry.computeBoundingSphere();
+			
+			var material = new THREE.ParticleSystemMaterial( { size: 1, vertexColors: true } );
+			particleSystem = new THREE.ParticleSystem( geometry, material );
+
+			return particleSystem;
 		}
 
 		function render() {
 			requestAnimationFrame(render);
 
-			cube.rotation.x += 0.01;
-			cube.rotation.y += 0.01;
+//			cube.rotation.x += 0.01;
+//			cube.rotation.y += 0.01;
 			
+			var canvas = document.getElementById("canvas");
+			camera.aspectRatio = canvas.clientWidth/canvas.clientHeight;
+			
+			renderer.setSize(renderer.domElement.clientWidth, renderer.domElement.clientHeight);
 			renderer.render(scene, camera);
+			Potree.renderer.viewport(0, 0, renderer.domElement.clientWidth, renderer.domElement.clientHeight);
 			Potree.render(pscene, camera);
 		};
 		
@@ -111,6 +228,35 @@
 		initPotree();
 		render();
 		
+		// mouse picking
+		document.onmousedown = function(event){
+			var callback = function(worldPos){
+				console.log(worldPos);
+				if(worldPos == null){
+					return;
+				}
+				
+				var geometry = new THREE.SphereGeometry(0.1,0.1,0.1);
+				var material = new THREE.MeshLambertMaterial({color: 0xffaaaa});
+				var cube = new THREE.Mesh(geometry, material);
+				scene.add(cube);
+				cube.position = new THREE.Vector3(worldPos.x, worldPos.y, worldPos.z);
+				cube.castShadow = true;
+				
+			};
+			Potree.renderer.worldPosAt({
+				"x" 		: event.layerX,
+				"y" 		: Potree.canvas.height - event.layerY,
+				"width"		: 16,
+				"height"	: 16,
+				"callback"	: callback,
+				"scene"		: pscene,
+				"camera"	: Potree.threejsToPotreeCamera(camera)
+			});
+		}
+		
 	</script>
+	
+	
 </body>
 </html>

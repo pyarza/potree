@@ -28,9 +28,6 @@ WeightedPointSizeMaterial.prototype.render = function(sceneNode, renderer){
 		var renderQueue = sceneNode.mno.renderQueue;
 		for(var i = 0; i < renderQueue.length; i++){
 			var node = renderQueue.get(i);
-//			if(node.level > 2){
-//				continue;
-//			}
 			pointClouds.push(node.pointCloud);
 		}
 	}

@@ -342,5 +342,4 @@ FilteredSplatsMaterial.prototype.shadingPass = function(oldBuffer, renderer){
 	}
 	
 	gl.disable(gl.BLEND);
-	gl.blendFunc(gl.ONE, gl.ONE);
 };
