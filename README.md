@@ -1,7 +1,16 @@
 # Potree - WebGL Pointcloud Viewer
 
 Homepage: <a href="http://potree.org/">potree.org</a>
+
+Potree is a WebGL based viewer for large point clouds. Instead of loading all points at once, which can be slow or even impossible, only visible regions up to a certain level of detail will be loaded and rendered. 
+
+
 <img src="http://potree.org/resources/images/pompei.jpg">
+
+## Documentation
+
+[To the documentation](./docs/doc.md)
+
 
 ## Demos
 * <a href="http://potree.org/demo/pompei/pompei.html" target="_blank">pompei</a>
