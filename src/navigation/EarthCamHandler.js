@@ -95,7 +95,7 @@ EarthCamHandler.prototype.invokeMouseDrag = function(event, pressedKeys, diffX, 
 	
 	if(pressedKeys.length == 1 && event.shiftKey && pressedKeys.contains(Mouse.left)){
 		// rotation around pivot
-		var amount = -this.rotateSpeed*timeSinceLastFrame;
+		var amount = -this.rotateSpeed*Potree.status.timeSinceLastFrame;
 		this.camera.rotateAroundPivot(amount*diffX, amount*diffY, this.pivot);
 	}else if(pressedKeys.length == 1 && pressedKeys.contains(Mouse.left)){
 		// translation
@@ -179,7 +179,7 @@ EarthCamHandler.prototype.invokeMouseWheel = function(delta, event){
 		if(delta < 0){
 			dmod += 0.1;
 		}
-		var v = V3.scale(dir, delta*timeSinceLastFrame*handler.zoomSpeed*dmod);
+		var v = V3.scale(dir, delta*Potree.status.timeSinceLastFrame*handler.zoomSpeed*dmod);
 		var mt = M4x4.makeTranslate3(v.x, v.y, v.z);
 		handler.camera.transform = M4x4.mul(mt, handler.camera.transform);
 		
@@ -205,7 +205,7 @@ EarthCamHandler.prototype.invokeMouseWheel = function(delta, event){
 //		dmod += 0.1;
 //	}
 //	console.log(dmod);
-//	var v = V3.scale(dir, delta*timeSinceLastFrame*this.zoomSpeed*dmod);
+//	var v = V3.scale(dir, delta*Potree.status.timeSinceLastFrame*this.zoomSpeed*dmod);
 //	var mt = M4x4.makeTranslate3(v.x, v.y, v.z);
 //	this.camera.transform = M4x4.mul(mt, this.camera.transform);
 };

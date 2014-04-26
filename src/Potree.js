@@ -73,6 +73,13 @@ Potree.includes = [
                   ];
 
 Potree.Settings = {};
+Potree.status = {
+	fpsHistory: [],
+	fps: 0,
+	timeSinceLastFrame: null,
+	lastLoopTime: null
+	
+};
 
 //settings
 Potree.Settings.showBoundingBoxes = false;
@@ -89,9 +96,9 @@ Potree.canvas = null;
 Potree.initialized = false;
 Potree.updateHandlers = [];
 Potree.drawHandlers = [];
-var renderer = null;
-Potree.fpsHistory = [];
-Potree.fps = 0;
+Potree.renderer = null;
+//Potree.fpsHistory = [];
+//Potree.fps = 0;
 
 
 /**
@@ -265,17 +272,17 @@ Potree.initGL = function() {
  * draws a frame to the canvas
  */
 Potree.draw = function() {
-	if(renderer == null){
-		renderer = new Renderer(Potree.currentScene, Framebuffer.getSystemBuffer());
+	if(Potree.renderer == null){
+		Potree.renderer = new Renderer(Potree.currentScene, Framebuffer.getSystemBuffer());
 	}
 	
 	Potree.canvas.width = Potree.canvas.clientWidth;
 	Potree.canvas.height = Potree.canvas.clientHeight;
 
-	var cam = renderer.scene.activeCamera;
+	var cam = Potree.renderer.scene.activeCamera;
 	cam.aspectRatio = Potree.canvas.clientWidth / Potree.canvas.clientHeight;
-	renderer.viewport(0, 0, Potree.canvas.clientWidth, Potree.canvas.clientHeight);
-	renderer.render();
+	Potree.renderer.viewport(0, 0, Potree.canvas.clientWidth, Potree.canvas.clientHeight);
+	Potree.renderer.render();
 	
 	for(var i = 0; i < Potree.drawHandlers.length; i++) {
 		var drawHandler = Potree.drawHandlers[i];
@@ -286,42 +293,43 @@ Potree.draw = function() {
 Potree.mainLoop = function mainLoop(){
 	Potree.calculateTimeSinceLastFrame();
 	
-	Potree.update(timeSinceLastFrame);
+	Potree.update(Potree.status.timeSinceLastFrame);
 	Potree.draw();
-	
-	// with 0ms, interaction becomes a lot slower in firefox.
-//	setTimeout(mainLoop, 10);
 };
 
-var lastLoopTime = null;
-var timeSinceLastFrame = null;
+//Potree.render = function(){
+//	Potree.calculateTimeSinceLastFrame();
+//	
+//	Potree.update(timeSinceLastFrame);
+//	Potree.draw();
+//}
+
 Potree.calculateTimeSinceLastFrame = function calculateTimeSinceLastFrame(){
 	var newDrawTime = new Date().getTime();
-	if (lastLoopTime != null) {
-		timeSinceLastFrame = (newDrawTime - lastLoopTime) / 1000.0;
+	if (Potree.status.lastLoopTime != null) {
+		Potree.status.timeSinceLastFrame = (newDrawTime - Potree.status.lastLoopTime) / 1000.0;
 	}else{
-		timeSinceLastFrame = 0;
+		Potree.status.timeSinceLastFrame = 0;
 	}
-	lastLoopTime = new Date().getTime();
+	Potree.status.lastLoopTime = new Date().getTime();
 
 };
-
 
 Potree.update = function update(time){
 	
 	var i;
 	var fps = 1 / time;
 	
-	Potree.fpsHistory.push(fps);
-	if(Potree.fpsHistory.length > 10){
-		Potree.fpsHistory.splice(0, 1);
+	Potree.status.fpsHistory.push(fps);
+	if(Potree.status.fpsHistory.length > 10){
+		Potree.status.fpsHistory.splice(0, 1);
 	}
 	var mean = 0;
-	for(i = 0; i < Potree.fpsHistory.length; i++){
-		mean += Potree.fpsHistory[i];
+	for(i = 0; i < Potree.status.fpsHistory.length; i++){
+		mean += Potree.status.fpsHistory[i];
 	}
-	mean = mean / Potree.fpsHistory.length;
-	Potree.fps = mean.toFixed(2);
+	mean = mean / Potree.status.fpsHistory.length;
+	Potree.status.fps = mean.toFixed(2);
 	
 	Potree.currentScene.rootNode.addTime(time);
 	PointcloudOctreeNode.nodesLoadedThisFrame = 0;
