@@ -26,7 +26,8 @@
 		var pointClouds = [];
 		var pointCloudsTested = 0;
 		var pointsTested = 0;
-		
+		var lastPosition = new THREE.Vector3(0,0,0);
+
 		function initThree(){
 			scene = new THREE.Scene();
 			camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
@@ -125,6 +126,13 @@
 				document.getElementById("lblPointCloudsTested").innerHTML = "PointClouds tested: " + pointCloudsTested;
 				document.getElementById("lblPointsTested").innerHTML = "Points tested: " + pointsTested;
 				document.getElementById("lblDuration").innerHTML = "Duration: " + time + "ms";
+				if (closest != null) {
+					var newPosition=new THREE.Vector3(0,0,0);
+					newPosition.add(closest.point).add(closest.node.position);
+					var distance = newPosition.distanceTo(lastPosition);
+					lastPosition=newPosition;
+					document.getElementById("lblDistance").innerHTML = "Distance: " + distance.toFixed(3) ;
+				}
 				
 			});
 			document.addEventListener( 'mousemove', onDocumentMouseMove, false );
@@ -206,6 +214,8 @@
 		<div id="lblPointCloudsTested">PointClouds tested: 0</div>
 		<div id="lblPointsTested">Points tested: 0</div>
 		<div id="lblDuration">Duration: </div>
+		<div id="lblDistance" title="distance between last two points clicked">Distance: </div>
+
 		
 	</div>
 	
