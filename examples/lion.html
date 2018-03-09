@@ -1,86 +1,74 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+	<meta charset="utf-8">
+	<meta name="description" content="">
+	<meta name="author" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+	<title>Potree Viewer</title>
 
-<link rel="stylesheet" type="text/css" href="../resources/css/potree.css" />
-<script type="text/javascript" src="../src/Potree.js"></script>
-<script type="text/javascript" >Potree.importScripts("..");</script>
-
-<script type="text/javascript">
-
-function DemoKeyListener(material){
-	this.material = material;
-}
-
-DemoKeyListener.prototype.invokeKeyPress = function(event){
-	if(event.keyCode == KeyCodes.NUMBER_1){
-		this.material.renderMode = PointCloudRenderMode.WEIGHTED_CIRCLE;
-	}else if(event.keyCode == KeyCodes.NUMBER_2){
-		this.material.renderMode = PointCloudRenderMode.FILTERED_SPLAT;
-	}
-}
-DemoKeyListener.prototype.invokeKeyDown = function(){}
-DemoKeyListener.prototype.invokeKeyUp = function(){}
-
-function init() {
-	
-	// init potree
-	var canvas = document.getElementById("canvas");
-	Potree.shaderDir = "../resources/shader";
-	var success = Potree.init(canvas);
-	if(!success){
-		return;
-	}
-	
-	// load point cloud
-	var scene = Potree.currentScene;
-	var cloudURL = "../resources/pointclouds/lion_takanawa/cloud.js";
-	var pcoNode = POCLoader.load(cloudURL);
-	scene.rootNode.addChild(pcoNode);
-	
-	// mirror point cloud along a-axis
-	pcoNode.transform = [1, 0, 0, 0,
-					      0, -1, 0, 0,
-					      0, 0, 1, 0,
-					      0, 0, 0, 1];
-	
-	// transform camera
-	var pivot = V3.$(-9,-1,-1.5);
-	var cam = scene.activeCamera;
-	cam.translate(pivot.x, pivot.y, pivot.z);
-	cam.translate(0,0,8);
-	cam.rotateAroundPivot(2, -0.3,pivot);
-	
-	// OrbitCamHandler rotates the camera around a pivot point
-	Potree.camHandler = new OrbitCamHandler(cam);
-	Potree.camHandler.pivot = pivot;
-	
-	// set point size
-	var material = MaterialManager.getMaterial("pointCloud");
-	material.pointSize = 1;
-	
-	// set Level of Detail
-	Potree.Settings.LODMultiplicator = 20.0;
-	
-	KeyListener.addListener(new DemoKeyListener(material));
-	canvas.focus();
-}
-
-</script>
-    
+	<link rel="stylesheet" type="text/css" href="../build/potree/potree.css">
+	<link rel="stylesheet" type="text/css" href="../libs/jquery-ui/jquery-ui.min.css">
+	<link rel="stylesheet" type="text/css" href="../libs/perfect-scrollbar/css/perfect-scrollbar.css">
+	<link rel="stylesheet" type="text/css" href="../libs/openlayers3/ol.css">
+	<link rel="stylesheet" type="text/css" href="../libs/spectrum/spectrum.css">
+	<link rel="stylesheet" type="text/css" href="../libs/jstree/themes/mixed/style.css">
 </head>
- <body onload="init()" class="claro" style="font-size: 62.5%;">
 
-	<div id="workarea" style="width: 100%; height: 100%">
-		<canvas id="canvas" width="800" height="600" tabIndex="1">
-			Your Browser does not support WebGL. Try the newest version of Firefox or Google Chrome.
-		</canvas>
+<body>
+	<script src="../libs/jquery/jquery-3.1.1.min.js"></script>
+	<script src="../libs/spectrum/spectrum.js"></script>
+	<script src="../libs/perfect-scrollbar/js/perfect-scrollbar.jquery.js"></script>
+	<script src="../libs/jquery-ui/jquery-ui.min.js"></script>
+	<script src="../libs/three.js/build/three.min.js"></script>
+	<script src="../libs/other/BinaryHeap.js"></script>
+	<script src="../libs/tween/tween.min.js"></script>
+	<script src="../libs/d3/d3.js"></script>
+	<script src="../libs/proj4/proj4.js"></script>
+	<script src="../libs/openlayers3/ol.js"></script>
+	<script src="../libs/i18next/i18next.js"></script>
+	<script src="../libs/jstree/jstree.js"></script>
+	<script src="../build/potree/potree.js"></script>
+	<script src="../libs/plasio/js/laslaz.js"></script>
+	
+	<!-- INCLUDE ADDITIONAL DEPENDENCIES HERE -->
+	<!-- INCLUDE SETTINGS HERE -->
+	
+	<div class="potree_container" style="position: absolute; width: 100%; height: 100%; left: 0px; top: 0px; ">
+		<div id="potree_render_area"></div>
+		<div id="potree_sidebar_container"> </div>
 	</div>
 	
-	<div id="infos" style="top: 0; bottom: 0; left: 10; right: 0; position: absolute; z-index: 100; font-size: 150%;  background: #fff; top: 10px; width: 300px; height: 70px;  padding: 10px 10px 15px 10px; border-radius: 4px">
-	Hold the left mouse button to rotate around the object. Use the scroll wheel to zoom in and out.<br>
-	1: default rendermode<br>
-	2: filtered splats (slow)
-	</div>
+	<script>
 	
-</body>
+		window.viewer = new Potree.Viewer(document.getElementById("potree_render_area"));
+		
+		viewer.setEDLEnabled(true);
+		viewer.setFOV(60);
+		viewer.setPointBudget(1*1000*1000);
+		viewer.loadSettingsFromURL();
+		
+		viewer.setDescription("");
+		
+		viewer.loadGUI(() => {
+			viewer.setLanguage('en');
+			$("#menu_appearance").next().show();
+			//viewer.toggleSidebar();
+		});
+		
+		// Lion
+		Potree.loadPointCloud("../pointclouds/lion_takanawa/cloud.js", "lion", function(e){
+			viewer.scene.addPointCloud(e.pointcloud);
+			
+			let material = e.pointcloud.material;
+			material.size = 1;
+			material.pointSizeType = Potree.PointSizeType.ADAPTIVE;
+			
+			viewer.fitToScreen();
+		});
+		
+	</script>
+	
+	
+  </body>
 </html>

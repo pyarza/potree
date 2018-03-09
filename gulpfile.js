@@ -1,332 +1,611 @@
-/**
- *  gulp.js to build the library
- */
-var path = require('path');
-var through = require('through');
-var gulp = require('gulp');
-var gutil = require('gulp-util');
-var File = gutil.File;
-var runSequence = require('run-sequence');
-var es = require('event-stream');
+
+const path = require('path');
+const gulp = require('gulp');
+
+const fs = require("fs");
+const concat = require('gulp-concat');
+const size = require('gulp-size');
+const rename = require('gulp-rename');
+const uglify = require('gulp-uglify');
+const gutil = require('gulp-util');
+const through = require('through');
+const os = require('os');
+const File = gutil.File;
+const connect = require('gulp-connect');
+const watch = require('glob-watcher');
 
 
+let server;
 
-var tap = require('gulp-tap');
-var size = require('gulp-size');
-var clean = require('gulp-clean');
-var serve = require('gulp-serve');
-var mdown = require('gulp-markdown');
-var concat = require('gulp-concat');
-var uglify = require('gulp-uglify');
-var jshint = require('gulp-jshint');
-var rename = require('gulp-rename');
-var minify = require('gulp-minify-css');
-var htmlreplace = require('gulp-html-replace');
-var insert = require('gulp-insert');
-
-
-var paths = {
-	shader: [
-		"./resources/shader/*",
-		"./resources/shader/filteredSplats/*", 
-		"./resources/shader/weightedPoints/*", 
+let paths = {
+	potree : [
+		"src/KeyCodes.js",
+		"src/extensions/EventDispatcher.js",
+		"src/extensions/PerspectiveCamera.js",
+		"src/extensions/OrthographicCamera.js",
+		"src/extensions/Ray.js",
+		"src/Potree.js",
+		"src/PotreeRenderer.js",
+		"src/PointCloudTree.js",
+		"src/WorkerPool.js",
+		"build/shaders/shaders.js",
+		"src/loader/POCLoader.js",
+		"src/loader/PointAttributes.js",
+		"src/loader/BinaryLoader.js",
+		"src/loader/GreyhoundBinaryLoader.js",
+		"src/loader/GreyhoundLoader.js",
+		"src/loader/LasLazLoader.js",
+		"src/materials/PointCloudMaterial.js",
+		"src/materials/EyeDomeLightingMaterial.js",
+		"src/materials/BlurMaterial.js",
+		"src/materials/NormalizationMaterial.js",
+		"src/materials/NormalizationEDLMaterial.js",
+		"src/navigation/InputHandler.js",
+		"src/navigation/FirstPersonControls.js",
+		"src/navigation/GeoControls.js",
+		"src/navigation/OrbitControls.js",
+		"src/navigation/EarthControls.js",
+		"src/LRU.js",
+		"src/Annotation.js",
+		"src/Actions.js",
+		"src/ProfileRequest.js",
+		"src/PointCloudOctree.js",
+		"src/PointCloudOctreeGeometry.js",
+		"src/PointCloudGreyhoundGeometry.js",
+		"src/PointCloudGreyhoundGeometryNode.js",
+		"src/utils.js",
+		"src/Features.js",
+		"src/TextSprite.js",
+		"src/AnimationPath.js",
+		"src/Version.js",
+		"src/utils/Measure.js",
+		"src/utils/MeasuringTool.js",
+		"src/utils/Profile.js",
+		"src/utils/ProfileTool.js",
+		"src/utils/TransformationTool.js",
+		"src/utils/Volume.js",
+		"src/utils/VolumeTool.js",
+		"src/utils/ClippingTool.js",
+		"src/utils/ScreenBoxSelectTool.js",
+		"src/utils/ClipVolume.js",
+		"src/utils/PolygonClipVolume.js",
+		"src/utils/Box3Helper.js",
+		"src/utils/PointCloudSM.js",
+		"src/utils/Message.js",
+		"src/utils/SpotLightHelper.js",
+		"src/exporter/GeoJSONExporter.js",
+		"src/exporter/DXFExporter.js",
+		"src/exporter/CSVExporter.js",
+		"src/exporter/LASExporter.js",
+		"src/arena4d/PointCloudArena4D.js",
+		"src/arena4d/PointCloudArena4DGeometry.js",
+		"src/viewer/PotreeRenderer.js",
+		"src/viewer/EDLRenderer.js",
+		"src/viewer/HQSplatRenderer.js",
+		"src/viewer/RepRenderer.js",
+		"src/viewer/View.js",
+		"src/viewer/Scene.js",
+		"src/viewer/viewer.js",
+		"src/viewer/profile.js",
+		"src/viewer/map.js",
+		"src/viewer/sidebar.js",
+		"src/viewer/PropertiesPanel.js",
+		"src/viewer/NavigationCube.js",
+		"src/stuff/HoverMenu.js",
+		"src/webgl/GLProgram.js",
+		"src/InterleavedBuffer.js",
+		"src/utils/toInterleavedBufferAttribute.js",
+		"src/utils/GeoTIFF.js",
 	],
-	mjs: [
-		"./libs/mjs/mjs.js"
+	laslaz: [
+		"build/workers/laslaz-worker.js",
+		"build/workers/lasdecoder-worker.js",
 	],
-	potree: [
-		"./src/License.js",
-		"./src/extensions/Array.js",
-		"./src/extensions/mjs.js",
-		"./src/extensions/String.js",
-		"./src/extensions/ArrayBuffer.js",
-		"./src/extensions/Float32Array.js",
-		"./src/utils/utils.js",
-		"./src/KeyListener.js",
-		"./src/KeyCodes.js",
-		"./src/MouseListener.js",
-		"./src/Mouse.js",
-		"./src/ResourceManager/TextureManager.js",
-		"./src/ResourceManager/MaterialManager.js",
-		"./src/shader/Shader.js",
-		"./src/utils/Plane.js",
-		"./src/utils/Frustum.js",
-		"./src/rendering/Renderer.js",
-		"./src/scenegraph/AABB.js",
-		"./src/scenegraph/SceneNode.js",
-		"./src/scenegraph/Camera.js",
-		"./src/scenegraph/Scene.js",
-		"./src/scenegraph/MeshNode.js",
-		"./src/scenegraph/Light.js",
-		"./src/scenegraph/Sphere.js",
-		"./src/objects/Mesh.js",
-		"./src/navigation/CamHandler.js",
-		"./src/navigation/FreeFlightCamHandler.js",
-		"./src/navigation/OrbitCamHandler.js",
-		"./src/navigation/EarthCamHandler.js",
-		"./src/Framebuffer.js",
-		"./src/FramebufferFloat32.js",
-		"./src/ResourceManager/ShaderManager.js",
-		"./src/utils/MeshUtils.js",
-		"./src/scenegraph/PointcloudOctreeSceneNode.js",
-		"./src/scenegraph/PointCloudSceneNode.js",
-		"./src/objects/PointCloud.js",
-		"./src/objects/PointcloudOctreeNode.js",
-		"./src/objects/PointcloudOctree.js",
-		"./src/materials/Material.js",
-		"./src/materials/WeightedPointSizeMaterial.js",
-		"./src/materials/FixedPointSizeMaterial.js",
-		"./src/materials/PointCloudMaterial.js",
-		"./src/materials/FlatMaterial.js",
-		"./src/materials/PhongMaterial.js",
-		"./src/materials/FilteredSplatsMaterial.js",
-		"./src/materials/GaussFillMaterial.js",
-		"./src/loader/POCLoader.js",
-		"./src/loader/PointAttributes.js",
-		"./src/loader/PlyLoader.js",
-		"./src/utils/LRU.js",
-		"./src/Potree.js",
-		"./build/js/shader.js",
-		"./build/js/workers.js"
+	html: [
+		"src/viewer/potree.css",
+		"src/viewer/sidebar.html",
+		"src/viewer/profile.html"
+	],
+	resources: [
+		"resources/**/*"
 	]
 };
 
-/**
- * a list of workers and their dependencies
- */
-var webWorkers = {
-	"PlyLoaderWorker" : {
-		"path" : "./src/loader/PlyLoaderWorker.js",
-		"sources" : [
-			"./src/loader/PointAttributes.js",
-			"./src/loader/PlyLoader.js",
-			"./src/loader/PlyLoaderWorker.js"
-		]
-	}
+let workers = {
+	"LASLAZWorker": [
+		"libs/plasio/workers/laz-perf.js",
+		"libs/plasio/workers/laz-loader-worker.js"
+	],
+	"LASDecoderWorker": [
+		"src/workers/LASDecoderWorker.js"
+	],
+	"BinaryDecoderWorker": [
+		"src/workers/BinaryDecoderWorker.js",
+		"src/Version.js",
+		"src/loader/PointAttributes.js",
+		"src/InterleavedBuffer.js",
+		"src/utils/toInterleavedBufferAttribute.js",
+	],
+	"GreyhoundBinaryDecoderWorker": [
+		"libs/plasio/workers/laz-perf.js",
+		"src/workers/GreyhoundBinaryDecoderWorker.js",
+		"src/Version.js",
+		"src/loader/PointAttributes.js",
+		"src/InterleavedBuffer.js",
+		"src/utils/toInterleavedBufferAttribute.js",
+	]
 };
 
-/**
- * create one file in workers build dir for each worker and it's dependencies
- */
-gulp.task('prepare_workers', function pack_sources(varname, target, sources) {
-	var subtasks = [];
-	for(var workerName in webWorkers){
-		var worker = webWorkers[workerName];
-		var subtask = gulp.src(worker.sources)
-		.pipe(concat(workerName))
-		.pipe(size({showFiles: true}))
-		.pipe(gulp.dest('build/js/workers'))
-		.pipe(size({showFiles: true}))
-		subtasks.push(subtask);
-	}
-	return es.merge.apply(null, subtasks);
-});
+let shaders = [
+	"src/materials/shaders/pointcloud.vs",
+	"src/materials/shaders/pointcloud.fs",
+	"src/materials/shaders/pointcloud_sm.vs",
+	"src/materials/shaders/pointcloud_sm.fs",
+	"src/materials/shaders/normalize.vs",
+	"src/materials/shaders/normalize.fs",
+	"src/materials/shaders/normalize_and_edl.fs",
+	"src/materials/shaders/edl.vs",
+	"src/materials/shaders/edl.fs",
+	"src/materials/shaders/blur.vs",
+	"src/materials/shaders/blur.fs"
+];
 
-/**
- * merge all workers in the worker build dir into a single file
- */
-gulp.task('pack_workers', function pack_sources(varname, target, sources) {
-	// Build examples
-	var buffer = [];
-	buffer.push("Potree.webWorkerSources = {");
-	var firstFile = null;
-	var fileName = "workers.js";
-	opt = {};
-	opt.newLine = gutil.linefeed;
-	
-	function bufferContents(file){
-		if (file.isNull()) return; // ignore
-		if (!firstFile) firstFile = file;
+
+gulp.task("workers", function(){
+
+	for(let workerName of Object.keys(workers)){
 		
-		var workerName = file.relative;
-		var workerPath = webWorkers[workerName].path;
+		gulp.src(workers[workerName])
+			.pipe(concat(`${workerName}.js`))
+			.pipe(gulp.dest('build/potree/workers'));
 		
-		var str = file.contents.toString('utf8');
-		str = str.replace(/\\/gm, "\\\\");
-		str = str.replace(/(\r\n|\n|\r)/gm,"\\n");
-		str = str.replace(/"/gm, "\\\"");
-		buffer.push("\"" + workerPath + "\" : \"" + str + "\",");
-	}
-	
-	function endStream(){
-		if (buffer.length === 0) return this.emit('end');
-		
-		var joinedContents = buffer.join(opt.newLine);
-		joinedContents = joinedContents + "\n};";
-		
-		var joinedPath = path.join(firstFile.base, fileName);
-		
-		var joinedFile = new File({
-			cwd: firstFile.cwd,
-			base: firstFile.base,
-			path: joinedPath,
-			contents: new Buffer(joinedContents)
-		});
-		
-		this.emit('data', joinedFile);
-		this.emit('end');
 	}
 
-	return gulp.src("./build/js/workers/*")
-		.pipe(new function (files,t) {return through(bufferContents, endStream)})
-		.pipe(size({showFiles: true}))
-		.pipe(gulp.dest('build/js'));
 });
 
-
-/**
- * modified gulp-replace
- * This task combines all shaders and saves them into shader.js
- * 
- */
-pack_shader = function() {
-	// Build examples
-	var buffer = [];
-	buffer.push("Potree.shaderSources = {");
-	var firstFile = null;
-	var fileName = "shader.js";
-	opt = {};
-	opt.newLine = gutil.linefeed;
-	
-	function bufferContents(file){
-		if (file.isNull()) return; // ignore
-		if (!firstFile) firstFile = file;
-		
-		var str = file.contents.toString('utf8');
-		str = str.replace(/(\r\n|\n|\r)/gm,"\\n");
-		buffer.push("\"" + file.relative.replace(/\\/gm, "/") + "\" : \"" + str + "\",");
-	}
-	
-	function endStream(){
-		if (buffer.length === 0) return this.emit('end');
-		
-		var joinedContents = buffer.join(opt.newLine);
-		joinedContents = joinedContents + "\n};";
-		
-		var joinedPath = path.join(firstFile.base, fileName);
-		
-		var joinedFile = new File({
-			cwd: firstFile.cwd,
-			base: firstFile.base,
-			path: joinedPath,
-			contents: new Buffer(joinedContents)
-		});
-		
-		this.emit('data', joinedFile);
-		this.emit('end');
-	}
-	
-	return gulp.src("./resources/shader/**/*")
-		.pipe(new function (files,t) {return through(bufferContents, endStream)})
-		.pipe(size({showFiles: true}))
-		.pipe(gulp.dest('build/js'));
-};
-
-gulp.task('pack_shader', pack_shader);
-
-gulp.task('scripts_mjs', function(){
-	return gulp.src(paths.mjs)
-			.pipe(concat('mjs.js'))
-			.pipe(size({showFiles: true}))
-			.pipe(gulp.dest('build/js'))
-			.pipe(rename({suffix: '.min'}))
-			.pipe(uglify({preserveComments: 'some', compress: false}))
-			.pipe(size({showFiles: true}))
-			.pipe(gulp.dest('build/js'));
-})
-
-gulp.task('scripts_potree', function() {
-	return gulp.src(paths.potree)
-		.pipe(concat('potree.js'))
-		.pipe(insert.append('\nPotree.singleSource = true;'))
-		.pipe(size({showFiles: true}))
-		.pipe(gulp.dest('build/js'))
-		.pipe(rename({suffix: '.min'}))
-		.pipe(uglify({preserveComments: 'some'}))
-		.pipe(size({showFiles: true}))
-		.pipe(gulp.dest('build/js'));
+gulp.task("shaders", function(){
+	return gulp.src(shaders)
+		.pipe(encodeShader('shaders.js', "Potree.Shader"))
+		.pipe(gulp.dest('build/shaders'));
 });
 
-gulp.task('scripts', function(callback){
-	runSequence('pack_shader', 'prepare_workers', 'pack_workers', 'scripts_mjs', 'scripts_potree', callback);
-})
-
-gulp.task('styles', function() {
-	// Copy all Stylesheets into build directory
-	return gulp.src('./resources/css/*.css')
-		.pipe(concat('potree.css'))
-		.pipe(gulp.dest('build/css'))
-		.pipe(rename({suffix: '.min'}))
-		.pipe(minify())
-		.pipe(gulp.dest('build/css'));
-});
-
-gulp.task('docs', function() {
-	// Build documentation
-	gulp.src('./docs/*.md')
-		.pipe(mdown())
-		.pipe(gulp.dest('build/docs'));
-
-	gulp.src('./docs/images/*')
-		.pipe(gulp.dest('build/docs/images'));
-	return;
-});
-
-gulp.task('examples', function() {
-	// Build examples
-	var list = [];
-	gulp.src('./examples/*.html')
-		.pipe(tap(function (file,t) {
-			var name = path.basename(file.path);
-			var item = '<a href="' + name + '">' + name + '</a>';
-			list.push('<li>' + item + '</li>');
-		}))
-		.pipe(gulp.dest('build'))
-		.on('end', function () {
-			gulp.src('./examples/index.tpl')
-				.pipe(htmlreplace('toc', list.join(''), '<ul>%s</ul>'))
-				.pipe(rename({extname: '.html'}))
-				.pipe(gulp.dest('build'))
-		});
-
-	// Copy resources
-	gulp.src('./resources/**/*')
-		.pipe(gulp.dest('build'));
-	return;
-});
-
-gulp.task('test', function() {
-	// Test Javascript source files
-	gulp.src(paths.mjs)
-		.pipe(jshint())
-		.pipe(jshint.reporter('default'));
-
+gulp.task("scripts", ['workers','shaders', "icons_viewer", "examples_page"], function(){
 	gulp.src(paths.potree)
-		.pipe(jshint())
-		.pipe(jshint.reporter('default'));
+		.pipe(concat('potree.js'))
+		.pipe(gulp.dest('build/potree'));
+
+	gulp.src(paths.laslaz)
+		.pipe(concat('laslaz.js'))
+		.pipe(gulp.dest('build/potree'));
+
+	gulp.src(paths.html)
+		.pipe(gulp.dest('build/potree'));
+
+	gulp.src(paths.resources)
+		.pipe(gulp.dest('build/potree/resources'));
+
+	gulp.src(["LICENSE"])
+		.pipe(gulp.dest('build/potree'));
+
 	return;
 });
 
-gulp.task('clean', function() {
-	// Clean the following directories
-	return gulp.src(['build'], { read: false })
-		.pipe(clean());
+gulp.task('build', ['scripts']);
+
+// For development, it is now possible to use 'gulp webserver'
+// from the command line to start the server (default port is 8080)
+gulp.task('webserver', function() {
+	server = connect.server({port: 1234});
 });
 
-gulp.task('watch', function () {
-	// Watch the following files for changes
-	gulp.watch(paths.mjs, ['debug']);
-	gulp.watch(paths.potree, ['debug']);
+gulp.task('examples_page', function() {
+
+	let settings = JSON.parse(fs.readFileSync("examples/page.json", 'utf8'));
+	let files = fs.readdirSync("./examples");
+
+	let unhandledCode = ``;
+	let exampleCode = ``;
+	let showcaseCode = ``;
+	let thirdpartyCode = ``;
+
+	{
+		let urls = settings.examples.map(e => e.url);
+		let unhandled = [];
+		for(let file of files){
+			let isHandled = false;
+			for(let url of urls){
+				
+				if(file.indexOf(url) !== -1){
+					isHandled = true;
+				}
+			}
+
+			if(!isHandled){
+				unhandled.push(file);
+			}
+		}
+		unhandled = unhandled
+			.filter(file => file.indexOf(".html") > 0)
+			.filter(file => file !== "page.html");
+
+		
+		for(let file of unhandled){
+			unhandledCode += `
+				<a href="${file}" class="unhandled">${file}</a>
+			`;
+		}
+	}
+
+	for(let example of settings.examples){
+		exampleCode += `
+		<a href="${example.url}" target="_blank" style="display: inline-block">
+			<div class="thumb" style="background-image: url('${example.thumb}'); ">
+				<div class="thumb-label">${example.label}</div>
+			</div>
+		</a>
+		`;
+	}
+
+	for(let showcaseItem of settings.showcase){
+		showcaseCode += `<a href="${showcaseItem.url}" target="_blank" style="display: inline-block">
+			<div class="thumb" style="background-image: url('${showcaseItem.thumb}'); ">
+				<div class="thumb-label">${showcaseItem.label}</div>
+			</div>
+		</a>
+		`;
+	}
+
+	for(let item of settings.thirdparty){
+		thirdpartyCode += `<a href="${item.url}" target="_blank" style="display: inline-block">
+			<div class="thumb" style="background-image: url('${item.thumb}'); ">
+				<div class="thumb-label">${item.label}</div>
+			</div>
+		</a>
+		`;
+	}
+	
+
+	let page = `
+		<html>
+			<head>
+			<style>
+
+			body{
+				background: #ECE9E9;
+				padding: 30px;
+			}
+
+			.thumb{
+				background-size: 140px 140px; 
+				width: 140px; 
+				height: 140px; 
+				border-radius: 5px; 
+				border: 1px solid black; 
+				box-shadow: 3px 3px 3px 0px #555; 
+				margin: 0px; 
+				float: left;
+			}
+
+			.thumb-label{
+				font-size: large; 
+				text-align: center; 
+				font-weight: bold; 
+				color: #FFF; 
+				text-shadow:black 0 0 5px, black 0 0 5px, black 0 0 5px, black 0 0 5px, black 0 0 5px, black 0 0 5px; 
+				height: 100%;
+			}
+
+			.unhandled_container{
+				max-width: 1200px; 
+				margin: auto; 
+				margin-top: 50px; 
+				
+			}
+
+			.unhandled{
+				width: 30%;
+				padding-top:8px;
+				padding-bottom:8px;
+				padding-left: 10px;
+				float:left;
+				font-family: "Helvetica Neue", "Lucida Grande", Arial;
+				font-size: 13px;
+				border: 1px solid rgba(0, 0, 0, 0);
+
+			}
+
+			.unhandled:hover{
+				border: 1px solid rgba(200, 200, 200, 1);
+				border-radius: 4px;
+				background: white;
+			}
+
+			a{
+				color: #555555;
+			}
+
+			h1{
+				font-weight: 500;
+				color: rgb(51, 51, 51);
+				font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+			}
+
+			#samples_container{
+				display: grid;
+				grid-template-columns: 70% 30%;
+				grid-gap: 10px;
+				grid-template-rows: auto auto;
+
+				max-width: 1300px;
+				margin: auto;
+			}
+
+
+			#thumb_container{
+				grid-column-start: 1;
+				grid-column-end: 1;
+				grid-row-start: 1;
+				grid-row-end: 1;
+
+				max-width: 1200px; 
+				margin: auto; 
+				margin-top: 20px
+			}
+
+			#external_container{
+				grid-column-start: 2;
+				grid-column-end: 2;
+				grid-row-start: 1;
+				grid-row-end: span 2;
+
+				margin-top: 20px
+			}
+
+			#showcase_container{
+				grid-column-start: 1;
+				grid-column-end: 1;
+				grid-row-start: 2;
+				grid-row-end: 2;
+
+				max-width: 1200px; 
+				margin: auto; 
+				margin-top: 20px;
+			}
+
+			</style>
+			</head>
+			<body>
+
+				<div id="samples_container">
+
+					<div id="thumb_container">
+						<h1>Examples</h1>
+						${exampleCode}
+					</div>
+
+					<div id="showcase_container">
+						<h1>Showcase</h1>
+						${showcaseCode}
+					</div>
+
+					<div id="external_container">
+						<h1>Third Party</h1>
+						${thirdpartyCode}
+					</div>
+
+				</div>
+
+				
+
+				<div class="unhandled_container">
+					<h1>Other</h1>
+					${unhandledCode}
+				</div>
+
+			</body>
+		</html>
+	`;
+
+	fs.writeFile(`examples/page.html`, page, (err) => {
+		if(err){
+			console.log(err);
+		}else{
+			console.log(`created examples/page.html`);
+		}
+	});
+
+
+
 });
 
-// Simple webserver
-gulp.task('serve', serve({
-	root: ['public', __dirname],
-	port: 3000
-}));
+gulp.task('icons_viewer', function() {
+	let iconsPath = "resources/icons";
 
-// called when you run `gulp` from cli
-gulp.task('build', [/*'examples',*/ 'scripts', 'styles', 'docs']);
-//gulp.task('debug', ['build', 'watch', 'serve'], function () {
-//	gutil.log('Webserver started:', gutil.colors.cyan('http://localhost:3000'));
-//});
+	fs.readdir(iconsPath, function(err, items) {
+		
+		let svgs = items.filter(item => item.endsWith(".svg"));
+		let other = items.filter(item => !item.endsWith(".svg"));
+
+		items = [...svgs, ...other];
+	
+		let iconsCode = ``;
+		for(let item of items){
+			let extension = path.extname(item);
+			if(![".png", ".svg", ".jpg", ".jpeg"].includes(extension)){
+				continue;
+			}
+
+			let iconCode = `
+			<span class="icon_container" style="position: relative; float: left">
+				<center>
+				<img src="${item}" style="height: 32px;"/>
+				<div style="font-weight: bold">${item}</div>
+				</center>
+			</span>
+			`;
+
+			//iconsCode += `<img src="${item}" />\n`;
+			iconsCode += iconCode;
+		}
+
+		let page = `
+			<html>
+				<head>
+					<style>
+						.icon_container{
+							border: 1px solid black;
+							margin: 10px;
+							padding: 10px;
+						}
+					</style>
+				</head>
+				<body>
+					<div id="icons_container">
+						${iconsCode}
+					</div>
+				</body>
+			</html>
+		`;
+
+		fs.writeFile(`${iconsPath}/index.html`, page, (err) => {
+			if(err){
+				console.log(err);
+			}else{
+				console.log(`created ${iconsPath}/index.html`);
+			}
+		});
+
+	});
+
+});
+
+gulp.task('watch', function() {
+	gulp.run("build");
+	gulp.run("webserver");
+
+	let watchlist = [
+		'src/**/*.js', 
+		'src/**/*.css', 
+		'src/**/*.html', 
+		'src/**/*.vs', 
+		'src/**/*.fs', 
+		'resources/**/*',
+		'examples//**/*.json',
+	];
+
+	let blacklist = [
+		'resources/icons/index.html'
+	];
+	
+	let watcher = watch(watchlist, cb => {
+
+		{ // abort if blacklisted
+			let file = cb.path.replace(/\\/g, "/");
+			let isOnBlacklist = blacklist.some(blacklisted => file.indexOf(blacklisted) >= 0);
+			if(isOnBlacklist){
+				return;
+			}
+		}
+
+		console.log("===============================");
+		console.log("watch event:");
+		console.log(cb);
+		gulp.run("build");	
+	});
+
+});
+
+
+let encodeWorker = function(fileName, opt){
+	if (!fileName) throw new PluginError('gulp-concat',  'Missing fileName option for gulp-concat');
+	if (!opt) opt = {};
+	if (!opt.newLine) opt.newLine = gutil.linefeed;
+
+	let buffer = [];
+	let firstFile = null;
+
+	function bufferContents(file){
+		if (file.isNull()) return; // ignore
+		if (file.isStream()) return this.emit('error', new PluginError('gulp-concat',  'Streaming not supported'));
+
+		if (!firstFile) firstFile = file;
+
+		let string = file.contents.toString('utf8');
+		buffer.push(string);
+	}
+
+	function endStream(){
+		if (buffer.length === 0) return this.emit('end');
+
+		let joinedContents = buffer.join("");
+		let content = joinedContents;
+
+		let joinedPath = path.join(firstFile.base, fileName);
+
+		let joinedFile = new File({
+			cwd: firstFile.cwd,
+			base: firstFile.base,
+			path: joinedPath,
+			contents: new Buffer(content)
+		});
+
+		this.emit('data', joinedFile);
+		this.emit('end');
+	}
+
+	return through(bufferContents, endStream);
+};
+
+let encodeShader = function(fileName, varname, opt){
+	if (!fileName) throw new PluginError('gulp-concat',  'Missing fileName option for gulp-concat');
+	if (!opt) opt = {};
+	if (!opt.newLine) opt.newLine = gutil.linefeed;
+
+	let buffer = [];
+	let files = [];
+	let firstFile = null;
+
+	function bufferContents(file){
+		if (file.isNull()) return; // ignore
+		if (file.isStream()) return this.emit('error', new PluginError('gulp-concat',  'Streaming not supported'));
+
+		if (!firstFile) firstFile = file;
+
+		let string = file.contents.toString('utf8');
+		buffer.push(string);
+		files.push(file);
+	}
+
+	function endStream(){
+		if (buffer.length === 0) return this.emit('end');
+
+		let joinedContent = "";
+		for(let i = 0; i < buffer.length; i++){
+			let b = buffer[i];
+			let file = files[i];
+
+			let fname = file.path.replace(file.base, "");
+			//console.log(fname);
+
+			let content = new Buffer(b).toString();
+			
+			let prep = `\nPotree.Shaders["${fname}"] = \`${content}\`\n`;
+
+			joinedContent += prep;
+		}
+
+		let joinedPath = path.join(firstFile.base, fileName);
+
+		let joinedFile = new File({
+			cwd: firstFile.cwd,
+			base: firstFile.base,
+			path: joinedPath,
+			contents: new Buffer(joinedContent)
+		});
+
+		this.emit('data', joinedFile);
+		this.emit('end');
+	}
+
+	return through(bufferContents, endStream);
+};

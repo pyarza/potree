@@ -1,168 +1,167 @@
 
-
 /**
  * @class Loads mno files and returns a PointcloudOctree
  * for a description of the mno binary file format, read mnoFileFormat.txt
- * 
+ *
  * @author Markus Schuetz
  */
-function POCLoader(){
-	
-}
- 
+Potree.POCLoader = function () {
+
+};
+
 /**
- * @return a point cloud octree with the root node data loaded. 
+ * @return a point cloud octree with the root node data loaded.
  * loading of descendants happens asynchronously when they're needed
- * 
- * @param file the xml mno file
+ *
+ * @param url
  * @param loadingFinishedListener executed after loading the binary has been finished
  */
-POCLoader.load = function load(file) {
-	try{
-		var pco = new PointcloudOctree();
-		var xhr = new XMLHttpRequest();
-		xhr.open('GET', file, false);
+Potree.POCLoader.load = function load (url, callback) {
+	try {
+		let pco = new Potree.PointCloudOctreeGeometry();
+		pco.url = url;
+		let xhr = Potree.XHRFactory.createXMLHttpRequest();
+		xhr.open('GET', url, true);
+
+		xhr.onreadystatechange = function () {
+			if (xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 0)) {
+				let fMno = JSON.parse(xhr.responseText);
+
+				let version = new Potree.Version(fMno.version);
+
+				// assume octreeDir is absolute if it starts with http
+				if (fMno.octreeDir.indexOf('http') === 0) {
+					pco.octreeDir = fMno.octreeDir;
+				} else {
+					pco.octreeDir = url + '/../' + fMno.octreeDir;
+				}
+
+				pco.spacing = fMno.spacing;
+				pco.hierarchyStepSize = fMno.hierarchyStepSize;
+
+				pco.pointAttributes = fMno.pointAttributes;
+
+				let min = new THREE.Vector3(fMno.boundingBox.lx, fMno.boundingBox.ly, fMno.boundingBox.lz);
+				let max = new THREE.Vector3(fMno.boundingBox.ux, fMno.boundingBox.uy, fMno.boundingBox.uz);
+				let boundingBox = new THREE.Box3(min, max);
+				let tightBoundingBox = boundingBox.clone();
+
+				if (fMno.tightBoundingBox) {
+					tightBoundingBox.min.copy(new THREE.Vector3(fMno.tightBoundingBox.lx, fMno.tightBoundingBox.ly, fMno.tightBoundingBox.lz));
+					tightBoundingBox.max.copy(new THREE.Vector3(fMno.tightBoundingBox.ux, fMno.tightBoundingBox.uy, fMno.tightBoundingBox.uz));
+				}
+
+				let offset = min.clone();
+
+				boundingBox.min.sub(offset);
+				boundingBox.max.sub(offset);
+
+				tightBoundingBox.min.sub(offset);
+				tightBoundingBox.max.sub(offset);
+
+				pco.projection = fMno.projection;
+				pco.boundingBox = boundingBox;
+				pco.tightBoundingBox = tightBoundingBox;
+				pco.boundingSphere = boundingBox.getBoundingSphere();
+				pco.tightBoundingSphere = tightBoundingBox.getBoundingSphere();
+				pco.offset = offset;
+				if (fMno.pointAttributes === 'LAS') {
+					pco.loader = new Potree.LasLazLoader(fMno.version);
+				} else if (fMno.pointAttributes === 'LAZ') {
+					pco.loader = new Potree.LasLazLoader(fMno.version);
+				} else {
+					pco.loader = new Potree.BinaryLoader(fMno.version, boundingBox, fMno.scale);
+					pco.pointAttributes = new Potree.PointAttributes(pco.pointAttributes);
+				}
+
+				let nodes = {};
+
+				{ // load root
+					let name = 'r';
+
+					let root = new Potree.PointCloudOctreeGeometryNode(name, pco, boundingBox);
+					root.level = 0;
+					root.hasChildren = true;
+					root.spacing = pco.spacing;
+					if (version.upTo('1.5')) {
+						root.numPoints = fMno.hierarchy[0][1];
+					} else {
+						root.numPoints = 0;
+					}
+					pco.root = root;
+					pco.root.load();
+					nodes[name] = root;
+				}
+
+				// load remaining hierarchy
+				if (version.upTo('1.4')) {
+					for (let i = 1; i < fMno.hierarchy.length; i++) {
+						let name = fMno.hierarchy[i][0];
+						let numPoints = fMno.hierarchy[i][1];
+						let index = parseInt(name.charAt(name.length - 1));
+						let parentName = name.substring(0, name.length - 1);
+						let parentNode = nodes[parentName];
+						let level = name.length - 1;
+						let boundingBox = Potree.POCLoader.createChildAABB(parentNode.boundingBox, index);
+
+						let node = new Potree.PointCloudOctreeGeometryNode(name, pco, boundingBox);
+						node.level = level;
+						node.numPoints = numPoints;
+						node.spacing = pco.spacing / Math.pow(2, level);
+						parentNode.addChild(node);
+						nodes[name] = node;
+					}
+				}
+
+				pco.nodes = nodes;
+
+				callback(pco);
+			}
+		};
+
 		xhr.send(null);
-		if(xhr.status === 200 || xhr.status === 0){
-			var fMno = JSON.parse(xhr.responseText);
-			if(pathExists(fMno.octreeDir + "/r")){
-				pco.octreeDir = fMno.octreeDir;
-			}else{
-				pco.octreeDir = file + "/../" + fMno.octreeDir;
-			}
-			
-			var pointAttributes = POCLoader.loadPointAttributes(fMno);
-			pco.setPointAttributes(pointAttributes);
-			
-			{ // load Root
-				var mRoot = new PointcloudOctreeNode("r", pco);
-				var aabb = new AABB();
-				aabb.setDimensionByMinMax(
-						[ fMno.boundingBox.lx, fMno.boundingBox.ly, fMno.boundingBox.lz ],  
-						[ fMno.boundingBox.ux, fMno.boundingBox.uy, fMno.boundingBox.uz ]);
-				mRoot.setAABB(aabb);
-				mRoot.points = fMno.hierarchy[0][1];
-				pco.rootNode = mRoot;
-			}
-			
-			// load remaining hierarchy
-			for( var i = 1; i < fMno.hierarchy.length; i++){
-				var nodeName = fMno.hierarchy[i][0];
-				var points = fMno.hierarchy[i][1];
-				var mNode = new PointcloudOctreeNode(nodeName, pco);
-				mNode.points = points;
-				pco.rootNode.addChild(mNode);
-				var childIndex = parseInt(mNode.name.charAt(mNode.name.length-1));
-				var childAABB = POCLoader.createChildAABB(mNode.parent.aabb, childIndex);
-				mNode.setAABB(childAABB);
-			}
-			
-		}
-		
-		var pcoNode = new PointcloudOctreeSceneNode(pco);
-		return pcoNode;
-	}catch(e){
-//		Logger.error("loading failed: '" + file + "'");
-//		Logger.error(e);
-		console.log("loading failed: '" + file + "'");
+	} catch (e) {
+		console.log("loading failed: '" + url + "'");
 		console.log(e);
+
+		callback();
 	}
 };
 
-POCLoader.loadPointAttributes = function(mno){
-	
-	var fpa = mno.pointAttributes;
-	var pa = new PointAttributes();
-	
-	for(var i = 0; i < fpa.length; i++){   
-		var pointAttribute = PointAttribute[fpa[i]];
+Potree.POCLoader.loadPointAttributes = function (mno) {
+	let fpa = mno.pointAttributes;
+	let pa = new Potree.PointAttributes();
+
+	for (let i = 0; i < fpa.length; i++) {
+		let pointAttribute = Potree.PointAttribute[fpa[i]];
 		pa.add(pointAttribute);
-	}                                                                     
-	
+	}
+
 	return pa;
-//	var fpa = mno.pointAttributes;
-//	var pa = {
-//		'numAttributes' : fpa.length,
-//		'bytesPerPoint' : 0,
-//		'attributes' : {}
-//	};
-//	
-//	for(var i = 0; i < fpa.length; i++){
-//		var pointAttribute = PointAttributes[fpa[i]];
-//		pa.attributes[i] = pointAttribute; 
-//		var bytes = pointAttribute.type.size * pointAttribute.numElements;
-//		pa.bytesPerPoint += bytes;
-//	}
-//	
-//	return pa;
 };
 
+Potree.POCLoader.createChildAABB = function (aabb, index) {
+	let min = aabb.min.clone();
+	let max = aabb.max.clone();
+	let size = new THREE.Vector3().subVectors(max, min);
 
-/**
- * creates an aabb that covers the area of the childnode at childIndex
- * 
- * @param aabb aabb of the parent
- * @param childIndex index of the childs region
- * @returns {AABB}
- */
-POCLoader.createChildAABB = function(aabb, childIndex){
-	var min = aabb.objectSpaceMin;
-	var max = aabb.objectSpaceMax;
-	var caabb = new AABB();
-	// (aabb.max - aabb.minPos) * 0.5
-	var dHalfLength = V3.scale(V3.sub(max,min), 0.5);
-	var xHalfLength = [ dHalfLength[0], 0, 0 ];
-	var yHalfLength = [ 0, dHalfLength[1], 0 ];
-	var zHalfLength = [ 0, 0, dHalfLength[2] ];
-
-	{
-		var cmin = min;
-		// max = min + (aabb.max - aabb.min) * 0.5;
-		var cmax = V3.add(min, dHalfLength);
-		var caabb = new AABB();
-		caabb.setDimensionByMinMax(cmin, cmax);
+	if ((index & 0b0001) > 0) {
+		min.z += size.z / 2;
+	} else {
+		max.z -= size.z / 2;
 	}
 
-	if (childIndex === 1) {
-		var min = V3.add(caabb.min, zHalfLength);
-		var max = V3.add(caabb.max, zHalfLength);
-		caabb.setDimensionByMinMax(min, max);
-		caabb.setColor([0.0, 0.0, 1.0, 1.0]);
-	}else if (childIndex === 3) {
-		var min = V3.add(V3.add(caabb.min, zHalfLength), yHalfLength);
-		var max = V3.add(V3.add(caabb.max, zHalfLength), yHalfLength);
-		caabb.setDimensionByMinMax(min, max);
-		caabb.setColor([1.0, 1.0, 0.0, 1.0]);
-	}else if (childIndex === 0) {
-		caabb.setColor([1.0, 0.0, 0.0, 1.0]);
-	}else if (childIndex === 2) {
-		var min = V3.add(caabb.min, yHalfLength);
-		var max = V3.add(caabb.max, yHalfLength);
-		caabb.setDimensionByMinMax(min, max);
-		caabb.setColor([0.0, 1.0, 0.0, 1.0]);
-	}else if (childIndex === 5) {
-		var min = V3.add(V3.add(caabb.min, zHalfLength), xHalfLength);
-		var max = V3.add(V3.add(caabb.max, zHalfLength), xHalfLength);
-		caabb.setDimensionByMinMax(min, max);
-		caabb.setColor([1.0, 1.0, 1.0, 1.0]);
-	}else if (childIndex === 7) {
-		var min = V3.add(caabb.min, dHalfLength);
-		var max = V3.add(caabb.max, dHalfLength);
-		caabb.setDimensionByMinMax(min, max);
-		caabb.setColor([0.0, 0.0, 0.0, 1.0]);
-	}else if (childIndex === 4) {
-		var min = V3.add(caabb.min, xHalfLength);
-		var max = V3.add(caabb.max, xHalfLength);
-		caabb.setDimensionByMinMax(min, max);
-		caabb.setColor([1.0, 0.0, 1.0, 1.0]);
-	}else if (childIndex === 6) {
-		var min = V3.add(V3.add(caabb.min, xHalfLength), yHalfLength);
-		var max = V3.add(V3.add(caabb.max, xHalfLength), yHalfLength);
-		caabb.setDimensionByMinMax(min, max);
-		caabb.setColor([0.0, 1.0, 1.0, 1.0]);
+	if ((index & 0b0010) > 0) {
+		min.y += size.y / 2;
+	} else {
+		max.y -= size.y / 2;
 	}
-	
-	return caabb;
+
+	if ((index & 0b0100) > 0) {
+		min.x += size.x / 2;
+	} else {
+		max.x -= size.x / 2;
+	}
+
+	return new THREE.Box3(min, max);
 };
-
-

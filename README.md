@@ -1,53 +1,69 @@
-# Potree - WebGL Pointcloud Viewer
 
-Homepage: <a href="http://potree.org/">potree.org</a>
+# README
 
-Potree is a WebGL based viewer for large point clouds. Instead of loading all points at once, which can be slow or even impossible, only visible regions up to a certain level of detail will be loaded and rendered. 
+* [Getting Started](./docs/getting_started.md)
 
+## About
 
-<img src="http://potree.org/resources/images/pompei.jpg">
-
-## Documentation
-
-[To the documentation](./docs/doc.md)
+Potree is a free open-source WebGL based point cloud renderer for large point clouds.
+It is based on the [TU Wien Scanopy project](https://www.cg.tuwien.ac.at/research/projects/Scanopy/)
+and it was part of the [Harvest4D Project](https://harvest4d.org/).
 
 
-## Demos
-* <a href="http://potree.org/demo/pompei/pompei.html" target="_blank">pompei</a>
-* <a href="http://potree.org/demo/potree_2014.01.22/skatepark.html" target="_blank">skatepark</a>
+<a href="http://potree.org/wp/demo/" target="_blank"> ![](./docs/images/potree_screens.png) </a>
 
-This video shows a point cloud of the St. Stephens Cathedral. It consists of ~700m points. 
-<a href="http://www.youtube.com/watch?v=p9e6xElafJU" target="_blank"><img src="http://img.youtube.com/vi/p9e6xElafJU/0.jpg"></a>
+Newest information and work in progress is usually available on [twitter](https://twitter.com/m_schuetz)
 
-## Getting Started
-1. Deploy potree on a webserver. 
-2. Open one of the demos in the examples directory. <br>
-Potree pages must run on a webserver so the url 
-should be something like "localhost/potree/examples/lion.html". URLs starting with "file:///" will not work.
+Contact: Markus Schütz (mschuetz@potree.org)
 
-This is what the lion demo looks like:
+Reference: [Potree: Rendering Large Point Clouds in Web Browsers](https://www.cg.tuwien.ac.at/research/publications/2016/SCHUETZ-2016-POT/SCHUETZ-2016-POT-thesis.pdf)
 
-![http://img.youtube.com/vi/p9e6xElafJU/0.jpg](./docs/images/lion_demo_screenshot.jpg)
+## Build
 
+Make sure you have [node.js](http://nodejs.org/) installed
 
-## Convert Your Own Pointclouds
-Use the PotreeConverter to convert your own point clouds into the potree format.
+Install all dependencies, as specified in package.json, 
+then, install the gulp build tool:
 
-* PotreeConverter binaries for windows are available here:
-http://potree.org/downloads/PotreeConverter_2014.04.06.zip
-* PotreeConverter source is available here:
-https://github.com/potree/PotreeConverter
+    cd <potree_directory>
+    npm install 
+    npm install -g gulp
+
+Use the ```gulp watch``` command to 
+
+* create ./build/potree 
+* watch for changes to the source code and automatically create a new build on change
+* start a web server at localhost:1234. Go to http://localhost:1234/examples/ to test the examples.
+
+```
+gulp watch
+```
+
+## Downloads
+
+[PotreeConverter source and Win64 binaries](https://github.com/potree/PotreeConverter/releases)
+
+## Showcase
+
+Take a look at the [potree showcase](http://potree.org/wp/demo/) for some live examples.
 
 ## Compatibility
 
-| Browser              | OS   | Result        |
-| -------------------- |:----:|:-------------:|
-| Chrome 32            | Win7 | works         |
-| Firefox 26           | Win7 | works         |
-| Safari               | Mac  | works         |
-| Opera 19             | Win7 | works         |
-| Internet Explorer 11 | Win7 | does not work |
+| Browser              | OS      | Result        |   |
+| -------------------- |:-------:|:-------------:|:-:|
+| Chrome 64            | Win10   | works         |   |
+| Firefox 58           | Win10   | works         |   |
+| Edge                 | Win10   | not supported |   |
+| Internet Explorer 11 | Win7    | not supported |   |
+| Chrome               | Android | works         | Reduced functionality due to unsupported WebGL extensions |
+| Opera                | Android | works         | Reduced functionality due to unsupported WebGL extensions |
 
+## Credits
 
-## License
-Potree is available under the FreeBSD license.
+* The multi-res-octree algorithms used by this viewer were developed at the Vienna University of Technology by Michael Wimmer and Claus Scheiblauer as part of the [Scanopy Project](http://www.cg.tuwien.ac.at/research/projects/Scanopy/).
+* [Three.js](https://github.com/mrdoob/three.js), the WebGL 3D rendering library on which potree is built.
+* [plas.io](http://plas.io/) point cloud viewer. LAS and LAZ support have been taken from the laslaz.js implementation of plas.io. Thanks to [Uday Verma](https://twitter.com/udaykverma) and [Howard Butler](https://twitter.com/howardbutler) for this!
+* [Harvest4D](https://harvest4d.org/) Potree currently runs as Master Thesis under the Harvest4D Project
+* Christian Boucheny (EDL developer) and Daniel Girardeau-Montaut ([CloudCompare](http://www.danielgm.net/cc/)). The EDL shader was adapted from the CloudCompare source code!
+* [Martin Isenburg](http://rapidlasso.com/), [Georepublic](http://georepublic.de/en/),
+[Veesus](http://veesus.com/), [Sigeom Sa](http://www.sigeom.ch/), [SITN](http://www.ne.ch/sitn), [LBI ArchPro](http://archpro.lbg.ac.at/),  [Pix4D](http://pix4d.com/) as well as all the contributers to potree and PotreeConverter and many more for their support.

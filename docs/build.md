@@ -1,18 +1,29 @@
-# How to use gulp.js to build the library
+
+# How to build the library
 
 ## Installation
 
-	npm install -g gulp
-	npm install --save-dev 
+Make sure you have [node.js](http://nodejs.org/) installed
+
+First, install all dependencies, as specified in package.json, 
+then, install the gulp build tool.
+
+    cd <potree_directory>
+    npm install 
+    npm install -g gulp
 
 ## Usage
 
-	gulp clean     // Deletes the build directory
-	gulp test      // Runs Javascript test "jshint"
-	gulp docs      // Build documentation
+Use this command to 
 
-	gulp debug     // Builds script files, watches for changes
-	               // and starts a simple webserver (port:3000)
-	gulp build     // Builds script files
+* create ./build/potree 
+* watch for changes to the source code and automatically create a new build on change
+* start a web server at localhost:1234. Go to http://localhost:1234/examples/ to test the examples.
 
-If Gulp.js is watching for changes, stop with `ctrl+c`.
+If the source code changes, a new build will be done automatically.
+
+    gulp watch
+
+Or do a build once, without watching for changes.
+
+    gulp build
